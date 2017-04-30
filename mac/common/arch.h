@@ -37,10 +37,6 @@
  */
 #include "archinfo.h"
 
-#ifndef ArchCompileState
-#	error ArchCompileState must be defined!
-#endif
-
 #ifndef	ArchByteMnemonic
 #	define ArchByteMnemonic ".byte"
 #endif
@@ -56,5 +52,44 @@
 #ifndef ArchQwordMnemonic
 #	define ArchQwordMnemonic ".quad"
 #endif
+
+#ifndef ArchExpand
+#	error ArchExpand must be defined!
+#endif
+
+#ifndef ArchFlagSpecs
+#	error ArchFlagSpecs must be defined!
+#endif
+
+/**
+ * Format of a flag specification.
+ */
+typedef struct
+{
+	/**
+	 * The flag.
+	 */
+	const char*				flag;
+	
+	/**
+	 * Pointer to where 'value' shall be stored if this flag is detected.
+	 */
+	int*					store;
+	
+	/**
+	 * The value to store at 'store' if the flag is detected.
+	 */
+	int					value;
+} FlagSpec;
+
+/**
+ * Expand a procedure into assembly language, and print into stdout.
+ */
+void ArchExpand(const char *macname, Proc *proc);
+
+/**
+ * Flag specifications (terminated with flag == NULL).
+ */
+extern FlagSpec ArchFlagSpecs[];
 
 #endif	/* ARCH_H */

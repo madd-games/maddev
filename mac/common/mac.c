@@ -40,18 +40,28 @@ typedef struct
 } RegFormat;
 
 RegFormat macRegFormats[] = {
-	{"ib%u%n",		REGTYPE_IB},
-	{"ub%u%n",		REGTYPE_UB},
-	{"iw%u%n",		REGTYPE_IW},
-	{"uw%u%n",		REGTYPE_UW},
-	{"id%u%n",		REGTYPE_ID},
-	{"ud%u%n",		REGTYPE_UD},
-	{"iq%u%n",		REGTYPE_IQ},
-	{"uq%u%n",		REGTYPE_UQ},
-	{"f%u%n",		REGTYPE_F},
-	{"fd%u%n",		REGTYPE_FD},
-	{"ptr%u%n",		REGTYPE_PTR},
+	{"%%ib%u%n",		REGTYPE_IB},
+	{"%%ub%u%n",		REGTYPE_UB},
+	{"%%iw%u%n",		REGTYPE_IW},
+	{"%%uw%u%n",		REGTYPE_UW},
+	{"%%id%u%n",		REGTYPE_ID},
+	{"%%ud%u%n",		REGTYPE_UD},
+	{"%%iq%u%n",		REGTYPE_IQ},
+	{"%%uq%u%n",		REGTYPE_UQ},
+	{"%%f%u%n",		REGTYPE_F},
+	{"%%fd%u%n",		REGTYPE_FD},
 	{NULL,			0}
+};
+
+/**
+ * Macro names MUST correspond to identifiers in mac.h!
+ */
+const char *macNames[] = {
+	"ret",
+	"label",
+	"mov",
+	
+	NULL,			/* terminator */
 };
 
 RegSpec macRegByName(const char *regname)
@@ -62,7 +72,7 @@ RegSpec macRegByName(const char *regname)
 	
 	for (scan=macRegFormats; scan->format != NULL; scan++)
 	{
-		if (sscanf(regname, scan->format, &index, &count) == 2)
+		if (sscanf(regname, scan->format, &index, &count) > 0)
 		{
 			if (count == strlen(regname))
 			{
@@ -80,6 +90,7 @@ int main(int argc, char *argv[])
 	char *line;
 	int lineno = 0;
 	
+	Proc *currentProc = NULL;
 	while ((line = fgets(linebuf, 2048, stdin)) != NULL)
 	{
 		lineno++;
@@ -99,7 +110,35 @@ int main(int argc, char *argv[])
 		char *cmd = strtok(line, SPACE_CHARS);
 		if (cmd == NULL) continue;
 		
-		if (strcmp(cmd, "global") == 0)
+		if (strcmp(cmd, "flag") == 0)
+		{
+			char *flag = strtok(NULL, SPACE_CHARS);
+			if (flag == NULL)
+			{
+				fprintf(stderr, "%s:%d: syntax for 'flag': flag <flag>\n", argv[0], lineno);
+				return 1;
+			};
+			
+			FlagSpec *spec;
+			for (spec=ArchFlagSpecs; spec->flag!=NULL; spec++)
+			{
+				if (strcmp(spec->flag, flag) == 0)
+				{
+					break;
+				};
+			};
+			
+			if (spec == NULL)
+			{
+				fprintf(stderr, "%s:%d: invalid flag '%s'\n", argv[0], lineno, flag);
+				return 1;
+			}
+			else
+			{
+				*(spec->store) = spec->value;
+			};
+		}
+		else if (strcmp(cmd, "global") == 0)
 		{
 			char *symname = strtok(NULL, SPACE_CHARS);
 			if (symname == NULL)
@@ -216,10 +255,29 @@ int main(int argc, char *argv[])
 		}
 		else if (strcmp(cmd, "proc") == 0)
 		{
-			RegSpec *argRegs = NULL;
-			size_t argCount = 0;
-			int variadic = 0;
-			const char *callConv = NULL;
+			if (currentProc != NULL)
+			{
+				fprintf(stderr, "%s:%d: nested 'proc'\n", argv[0], lineno);
+				return 1;
+			};
+			
+			char *name = strtok(NULL, SPACE_CHARS);
+			if (name == NULL)
+			{
+				fprintf(stderr, "%s:%d: snytax for 'proc': proc <name> [-param=value...] [arg-regs...]\n",
+						argv[0], lineno);
+				return 1;
+			};
+			
+			currentProc = (Proc*) malloc(sizeof(Proc));
+			currentProc->name = strdup(name);
+			currentProc->conv = strdup(MAC_ABI);
+			currentProc->flags = 0;
+			currentProc->first = NULL;
+			currentProc->last = NULL;
+			currentProc->argRegs = NULL;
+			currentProc->numArgs = 0;
+			currentProc->lineno = lineno;
 			
 			char *par;
 			for (par=strtok(NULL, SPACE_CHARS); par!=NULL; par=strtok(NULL, SPACE_CHARS))
@@ -228,16 +286,20 @@ int main(int argc, char *argv[])
 				{
 					if (memcmp(par, "-conv=", 6) == 0)
 					{
-						callConv = strdup(&par[6]);
+						free(currentProc->conv);
+						currentProc->conv = strdup(&par[6]);
 					}
 					else if (strcmp(par, "-var") == 0)
 					{
-						variadic = 1;
+						currentProc->flags |= PROC_VARIADIC;
+					}
+					else if (strcmp(par, "-leaf") == 0)
+					{
+						currentProc->flags |= PROC_LEAF;
 					}
 					else
 					{
-						fprintf(stderr, "%s:%d: unknown parameter to 'proc': %s\n",
-								argv[0], lineno, par);
+						fprintf(stderr, "%s:%d: unrecognised option '%s'\n", argv[0], lineno, par);
 						return 1;
 					};
 				}
@@ -246,25 +308,158 @@ int main(int argc, char *argv[])
 					RegSpec spec = macRegByName(par);
 					if (spec == REGSPEC_INVALID)
 					{
-						fprintf(stderr, "%s:%d: invalid register name '%s'\n",
-								argv[0], lineno, par);
+						fprintf(stderr, "%s:%d: invalid register name '%s'\n", argv[0], lineno, par);
 						return 1;
 					};
 					
-					size_t index = argCount++;
-					argRegs = (RegSpec*) realloc(argRegs, sizeof(RegSpec) * argCount);
-					argRegs[index] = spec;
+					size_t index = currentProc->numArgs++;
+					currentProc->argRegs = (RegSpec*) realloc(currentProc->argRegs,
+										sizeof(RegSpec)*currentProc->numArgs);
+					currentProc->argRegs[index] = spec;
 				};
 			};
 		}
+		else if (strcmp(cmd, "endproc") == 0)
+		{
+			if (currentProc == NULL)
+			{
+				fprintf(stderr, "%s:%d: 'endproc' without matching 'proc'\n", argv[0], lineno);
+				return 1;
+			};
+			
+			ArchExpand(argv[0], currentProc);
+			
+			free(currentProc->name);
+			free(currentProc->conv);
+			free(currentProc->argRegs);
+			
+			while (currentProc->first != NULL)
+			{
+				Macro *macro = currentProc->first;
+				currentProc->first = macro->next;
+				free(macro);
+			};
+			
+			free(currentProc);
+			currentProc = NULL;
+		}
 		else if (cmd[strlen(cmd)-1] == ':')
 		{
-			printf("%s\n", cmd);
+			if (currentProc == NULL)
+			{
+				printf("%s\n", cmd);
+			}
+			else
+			{
+				Macro *mac = (Macro*) malloc(sizeof(Macro));
+				mac->next = NULL;
+				mac->type = MAC_LABEL;
+				mac->lineno = lineno;
+				mac->ops = (Operand*) malloc(sizeof(Operand));
+				mac->numOps = 1;
+				
+				if (currentProc->last == NULL)
+				{
+					currentProc->first = currentProc->last = mac;
+				}
+				else
+				{
+					currentProc->last->next = mac;
+					currentProc->last = mac;
+				};
+				
+				mac->ops[0].symbol.type = OPR_SYMBOL;
+				cmd[strlen(cmd)-1] = 0;		// remove the ":"
+				mac->ops[0].symbol.name = strdup(cmd);
+			};
 		}
 		else
 		{
-			fprintf(stderr, "%s:%d: unknown macro '%s'\n", argv[0], lineno, cmd);
+			int mactype;
+			for (mactype=0; macNames[mactype]!=NULL; mactype++)
+			{
+				if (strcmp(macNames[mactype], cmd) == 0)
+				{
+					break;
+				};
+			};
+			
+			if (macNames[mactype] == NULL)
+			{
+				fprintf(stderr, "%s:%d: invalid macro name '%s'\n", argv[0], lineno, cmd);
+				return 1;
+			};
+			
+			if (currentProc == NULL)
+			{
+				fprintf(stderr, "%s:%d: procedural macro '%s' used outside procedure\n", argv[0], lineno, cmd);
+				return 1;
+			};
+			
+			Macro *mac = (Macro*) malloc(sizeof(Macro));
+			mac->next = NULL;
+			mac->type = mactype;
+			mac->lineno = lineno;
+			mac->ops = NULL;
+			mac->numOps = 0;
+			
+			if (currentProc->last == NULL)
+			{
+				currentProc->first = currentProc->last = mac;
+			}
+			else
+			{
+				currentProc->last->next = mac;
+				currentProc->last = mac;
+			};
+			
+			char *par;
+			for (par=strtok(NULL, SPACE_CHARS); par!=NULL; par=strtok(NULL, SPACE_CHARS))
+			{
+				size_t index = mac->numOps++;
+				mac->ops = realloc(mac->ops, sizeof(Operand)*mac->numOps);
+				Operand *op = &mac->ops[index];
+				
+				if (par[0] == '%')
+				{
+					op->reg.type = OPR_REG;
+					op->reg.spec = macRegByName(par);
+					
+					if (op->reg.spec == REGSPEC_INVALID)
+					{
+						fprintf(stderr, "%s:%d: invalid register name '%s'\n", argv[0], lineno, par);
+						return 1;
+					};
+				}
+				else if (par[0] == '$')
+				{
+					op->con.type = OPR_CONST;
+					int sz;
+					if (sscanf(par, "$%d%n", &op->con.value, &sz) < 1)
+					{
+						fprintf(stderr, "%s:%d: invalid constant '%s'\n", argv[0], lineno, par);
+						return 1;
+					};
+					
+					if ((size_t)sz != strlen(par))
+					{
+						fprintf(stderr, "%s:%d: invalid constant '%s'\n", argv[0], lineno, par);
+						return 1;
+					};
+				}
+				else
+				{
+					op->symbol.type = OPR_SYMBOL;
+					op->symbol.name = strdup(par);
+				};
+			};
 		};
+	};
+	
+	if (currentProc != NULL)
+	{
+		fprintf(stderr, "%s:%d: unterminated 'proc'\n", argv[0], lineno);
+		return 1;
 	};
 	
 	return 0;

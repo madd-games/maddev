@@ -26,14 +26,28 @@
 	OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef X86_ARCH_INFO_H
-#define X86_ARCH_INFO_H
+#ifndef X86_64_ARCH_INFO_H
+#define X86_64_ARCH_INFO_H
 
-#define	ArchCompileState		X86CompileState
+#include <inttypes.h>
+#include "mac.h"
+
+#define	ArchExpand			X86_64_Expand
+#define	ArchFlagSpecs			X86_64_FlagSpecs
 
 typedef struct
 {
+	/**
+	 * -mno-red-zone
+	 * If set, do not use the red zone in the System V ABI.
+	 */
+	int				mno_red_zone;
 	
-} X86CompileState;
+	/**
+	 * -fno-omit-frame-pointer
+	 * If set, always use %rbp as the frame pointer.
+	 */
+	int				fno_omit_frame_pointer;
+} X86_64_Flags;
 
 #endif /* X86_ARCH_INFO_H */

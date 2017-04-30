@@ -2,20 +2,16 @@
 # Determine configuration options for the macro-compiler
 mac_archdir=""
 mac_extra_cflags=""
+mac_target_abi=""
 
 # First determine architecture-specific options. We must set the 'mac_archdir' shell variable
 # to the name of a subdirectory in mac/arch which contains additional source and include files
 # for the given architecture. We also need to add whatever C compiler flags we need (for example
 # macro definitions) to the 'mac_extra_cflags' variable.
 case $target in
-	i[3-7]86-*)
-		mac_archdir="x86"
-		mac_extra_cflags="$mac_extra_cflags -DTARGET_X86 -DTARGET_IA32"
-		;;
-	
 	x86_64-*)
-		mac_archdir="x86"
-		mac_extra_cflags="$mac_extra_cflags -DTARGET_X86 -DTARGET_AMD64 -DTARGET_X86_64"
+		mac_archdir="x86_64"
+		mac_extra_cflags="$mac_extra_cflags -DTARGET_AMD64 -DTARGET_X86_64"
 		;;
 		
 	*)
@@ -28,12 +24,8 @@ esac
 # for a given OS on the specific architecture. We add extra flags to 'mac_extra_cflags' wherever
 # necessary.
 case $target in
-	i[3-7]86-linux*)
-		mac_extra_cflags="$mac_extra_cflags -DX86_ABI=\"sysv\""
-		;;
-		
 	x86_64-linux*)
-		mac_extra_cflags="$mac_extra_cflags -DX86_ABI=\"sysv\""
+		mac_target_abi="sysv"
 		;;
 	
 	*)
@@ -41,3 +33,12 @@ case $target in
 		exit 1
 		;;
 esac
+
+# Now check parameters
+if [ "$mac_target_abi" = "" ]
+then
+	echo >&2 "$0: error: mac: target ABI not specified!"
+	exit 1
+fi
+
+mac_extra_cflags="$mac_extra_cflags -DMAC_ABI='\"$mac_target_abi\"'"
