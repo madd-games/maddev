@@ -1,0 +1,13 @@
+# libobj/config/elf64.sub
+# Set configuration options for the ELF64 target.
+# We add to the 'libobj_extra_cflags' array.
+
+# Architecture-specific options.
+case $target in
+	x86_64-*)
+		libobj_extra_cflags="$libobj_extra_cflags -DELF_MACHINE_NUMBER=62 -DELF_ARCH_LE -DELF_RELOC_RELA"
+		;;
+	*)
+		echo >&2 "$0: elf64: unsupported target '$target'!"
+		exit 1
+esac

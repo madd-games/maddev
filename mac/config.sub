@@ -28,6 +28,10 @@ case $target in
 		mac_target_abi="sysv"
 		;;
 	
+	x86_64-elf)
+		mac_target_abi="sysv"
+		;;
+		
 	*)
 		echo >&2 "$0: error: mac: target '$target' not supported!"
 		exit 1

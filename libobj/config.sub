@@ -1,0 +1,25 @@
+# libobj/config.sub
+# Determine configuration options for the object-handler library.
+libobj_backend=""
+libobj_extra_cflags=""
+
+# Determine the target object file format for a specific target. 'libobj_backend' must be set
+# to the appropriate backend, and 'libobj_extra_cflags' should be set to whatever C flags must
+# be passed when compiling the backend code.
+case $target in
+	x86_64-linux*)
+		libobj_backend="elf64"
+		;;
+	
+	x86_64-elf)
+		libobj_backend="elf64"
+		;;
+	
+	*)
+		echo >&2 "$0: libobj: unsupported target $target!"
+		exit 1
+		;;
+esac
+
+# Now run the configuration file for a particular backend.
+. $srcdir/libobj/config/${libobj_backend}.sub

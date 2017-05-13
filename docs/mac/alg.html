@@ -1,0 +1,28 @@
+<h1 style="text-align: center;">Macro-Compiler</h1>
+<hr/>
+
+<h1>3. Translation Algorithm</h1>
+<p>
+This page describes the translation algorithm used by <code>mac</code> to translate the macro-language into assembly in the most optimal way possible. The algorithm is long and is best described in multiple stages.
+</p>
+
+<h2>3.1. Data Flow Analysis</h2>
+<h3>3.1.1. Breaking Procedures into Independent Blocks</h3>
+
+<p>
+The macro-compiler will take each procedure in the source and divide it into so-called <i>independent blocks</i>. The boundaries of independent blocks are called <i>fences</i>; a fence exists at the following points:
+</p>
+
+<ul>
+<li>The beginning and end of the procedure, obviously.</li>
+<li>At each label, because the code between labels must be executable when a jump to a label is made.</li>
+<li>At <i>explicit fences</i>, marked with the <code>fence</code> macro (those are emitted due to accesses to <code>volatile</code> variable in C, for example).</li>
+<li>At branching macros.</li>
+</ul>
+
+<p>
+
+<h3>3.1.2. Building Data Flow Trees</h3>
+<p>
+<i>Data Flow Trees</i> (DFTs) are similar to ASTs, but are not necessarily equivalent to statements listed in a source language. Reordering of statements may implicitly happen at this stage (which is why fencing was necessary above). Each node in a DFT is marked with an <i>operator</i> to evaluate, and the branches are sub-DFTs which evaluate to the operands. The simplest DFT is a constant value. At this stage, each macro-register used by the block becomes a "DFT holder". They are initialized to the "unknown input DFT".
+</p>
