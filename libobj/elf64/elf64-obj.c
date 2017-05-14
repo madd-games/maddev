@@ -115,7 +115,7 @@ int objWrite(Object *obj, const char *filename)
 	strtabPut(&symstrtab, "");
 	Elf64_Sym *symtab = (Elf64_Sym*) malloc(sizeof(Elf64_Sym));
 	size_t numSymbols = 1;
-	size_t numLocalSymbols = 1;
+	size_t numLocalSymbols = 0;		/* maybe later */
 	memset(symtab, 0, sizeof(Elf64_Sym));
 	
 	// local symbols
@@ -123,7 +123,6 @@ int objWrite(Object *obj, const char *filename)
 	for (sym=obj->symbols; sym!=NULL; sym=sym->next)
 	{
 		size_t index = numSymbols++;
-		numLocalSymbols++;
 		
 		symtab = (Elf64_Sym*) realloc(symtab, numSymbols * sizeof(Elf64_Sym));
 		symtab[index].st_name = ELF_MAKE32(strtabPut(&symstrtab, sym->name));
