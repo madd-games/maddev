@@ -1,0 +1,15 @@
+# libcommon/config.sub
+# Determine configuration options for the common interfaces libary.
+libcommon_hostlib=""
+libcommon_ldflags=""
+
+case $host in
+	*-linux*)
+		libcommon_hostlib="posix"
+		libcommon_ldflags="-pthread"
+		;;
+	
+	*)
+		echo >&2 "$0: libcommon; unsupported host $host!"
+		;;
+esac
