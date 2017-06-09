@@ -265,7 +265,7 @@ int objSectionAppend(Section *sect, const void *data, size_t size);
 
 /**
  * Add a relocation to a section. The section must be PROGBITS. This automatically emits the correct
- * number of bytes (zeroes), and adds a relocation table. If the section is not PROGBITS, returns -1;
+ * number of bytes (zeroes), and adds a relocation entry. If the section is not PROGBITS, returns -1;
  * otherwise returns 0 on success. Defined in common/libobj.c.
  */
 int objSectionReloc(Section *sect, const char *symbol, int size, int type, int64_t addend);

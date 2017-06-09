@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Madd Assembler</title>
+		<link rel="stylesheet" type="text/css" href="style.css"/>
+	</head>
+	
+	<body>
+		<div class="banner">Madd Assembler</div>
+		<hr/>
+		
+		<h1>1. Introduction</h1>
+		<p>
+			The assembler translates <i>assembly language</i> - a human-readable representation of machine instructions, into binary machine code, directly executable by the CPU. The machine code (and any data) is placed in an object file in the format appropriate for the target machine, which may be passed to the linker to create executable or libraries. Assembly language is different on each CPU architecture.
+		</p>
+		
+		<a name="usage"><h2>1.1. Command Usage</h2></a>
+<pre>
+[<i>prefix-</i>]as [-o <i>output-file</i>] <i>input-file</i>
+</pre>
+		
+		<p>
+		The <i>input-file</i> parameter specifies the name of a file from which assembly code will be read; if it is not specified, the assembler by defualt reads from standard input. The <i>output-file</i> parameter names the object file into which assembled data will be written; if not specified, it default to <code>a.out</code>.
+		</p>
+	</body>
+</html>

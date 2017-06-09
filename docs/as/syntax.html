@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Madd Assembler</title>
+		<link rel="stylesheet" type="text/css" href="style.css"/>
+	</head>
+	
+	<body>
+		<div class="banner">Madd Assembler</div>
+		<hr/>
+		
+		<h1>2. Syntax</h1>
+		<p>
+			Assembly language is different on every architecture, so likewise the syntax depends on the target. However, to make things simpler, there are a few syntax generalizations (specific to the Madd assembler):
+		</p>
+		
+		<ul>
+		<li>Input is parsed line-by-line, and all lines are independent; there are no multi-line constructs.</li>
+		<li>Lines beginning with `<code>.</code>' (possibly preceded by whitespace) are assembler directives directly understood by the generic assembler (target-independent).</li>
+		<li>The string `<code>//</code>' defines the start of a line comment (everything from that symbol up to the end of the line is ignored). There is also an addition, target-specific comment delimeter (see descriptions of architectures below).</li>
+		<li>Any combination of consecutives spaces and tabs ("whitespace") counts as a single space. Whitespace at the start and end of each line is removed.</li>
+		<li>Empty lines (or lines contianing only whitespace) are ignored.</li>
+		<li>A line ending with `<code>:</code>' shall be treated as a symbol name followed by a colon, and that symbol value becomes the address of the current position.</li>
+		<li>Everything else is an assembly instruction, and is target-specific.</li>
+		</ul>
+		
+		<p>
+		For every architecture, there are instructions which are used to simply emit arbitrary data, without machine code. They may also be used to emit a pointer, and that requires a relocation; for this reason, they cannot be made into generic assembler directives.
+		</p>
+		
+		<a name="dir"><h2>2.1. Directives</h2></a>
+		<p>
+		The generic assembler recognises the following directives:
+		</p>
+		
+		<div class="spec">
+		<code>.globl <i>symbolName</i></code>
+		<p>
+			By default, all defined symbols have local binding (are not visible outside the compilation unit). This directive marks the symbol identified by <i>symbolName</i> as having global binding (visible to all compilation units).
+		</p>
+		</div>
+
+		<div class="spec">
+			<code>.weak <i>symbolName</i></code>
+			<p>
+				By default, all defined symbols have local binding (are not visible outside the compilation unit). This directive marks the symbol identified by <i>symbolName</i> as having weak binding (visible to all compilation units, but only if no global symbol with the same name exists).
+			</p>
+		</div>
+		
+		<div class="spec">
+			<code>.section <i>name</i> [<i>type</i> [<i>flags</i>]]</code>
+			<p>
+				Changes the section into which the following code/data will be written. The section will be called <i>name</i>. The <i>type</i> is one of the following:
+			</p>
+		
+			<ul>
+			<li><code>progbits</code> - the section contains code or initialized data.</li>
+			<li><code>nobits</code> - the section contains uninitialized data (all zeroes). It is not physically stored on disk, but created at runtime (if the target object format allows it), hence you cannot place any data or relocations here; only symbols and zeroes.</li>
+			</ul>
+			</div>
+		
+			<p>
+			The <i>flags</i> are a string, where each character specifies a permission for the section. Only listed flags are set. Please note that some architectures or object formats may not enforce all permissions.
+			</p>
+		
+			<ul>
+			<li><code>r</code> - the section may be read by the executable.</li>
+			<li><code>w</code> - the section may be written to by the executable.</li>
+			<li><code>x</code> - this section contains executable code.</li>
+			</ul>
+		
+			<p>
+			If <i>type</i> or <i>flags</i> are not specified, the defaults are used. The default section type is <code>nobits</code> for the <code>.bss</code> section, and <code>progbits</code> for any other name. The default flags are <code>rx</code> for sections <code>.text</code>, <code>.init</code> and <code>.fini</code>; <code>r</code> for <code>.rodata</code>, and <code>rw</code> for any other section.
+			</p>
+		
+			<p>
+			If any code or data is emitted before any <code>.section</code> directive, then the default section is <code>.text</code> with its default permissions. Defining the same section multiple times with different attributes (including in other compiulation units being linked in) results in undefined behaviour. If the same section is defined multiple times with the same attributes, all its parts are marged into a single section.
+			</p>
+		</div>
+		
+		<div class="spec">
+			<code>.text</code>
+			<p>
+			For convenience, equivalent to `<code>.section .text</code>'.
+			</p>
+		</div>
+	</body>
+</html>

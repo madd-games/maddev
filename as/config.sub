@@ -1,0 +1,16 @@
+# as/config.sub
+# Determine configuration parameters for the assembler
+as_family=""
+as_extra_cflags=""
+
+case $target in
+	x86_64-*)
+		as_family="x86"
+		as_extra_cflags="-DX86_DEFAULT_BITS=64"
+		;;
+		
+	*)
+		echo >&2 "$0: as: unsupported target $target!"
+		exit 1
+		;;
+esac
