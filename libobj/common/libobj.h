@@ -71,6 +71,13 @@
 #define	REL_QWORD				8
 
 /**
+ * Object types.
+ */
+#define	OBJTYPE_RELOC				0	/* relocatable object */
+#define	OBJTYPE_EXEC				1	/* executable file */
+#define	OBJTYPE_SHARED				2	/* shared library */
+
+/**
  * Structures used to represent types in specific byte order. We defined that as structures to
  * prevent the compiler from accepting writes to the wrong type.
  */
@@ -105,7 +112,7 @@ typedef struct Reloc_
 	/**
 	 * Offset into the section.
 	 */
-	off_t					offset;
+	int64_t					offset;
 	
 	/**
 	 * Name of the symbol against which this relocation is to be calculated.
@@ -188,7 +195,7 @@ typedef struct Symbol_
 	/**
 	 * The offset into the section where this symbol is defined.
 	 */
-	off_t					offset;
+	int64_t					offset;
 	
 	/**
 	 * Size of symbol (if applicable; else 0).
@@ -220,6 +227,11 @@ typedef struct
 	 * Symbols.
 	 */
 	Symbol*					symbols;
+	
+	/**
+	 * Object type (OBJTYPE_*). Default is OBJTYPE_RELOC.
+	 */
+	int					type;
 } Object;
 
 /**
