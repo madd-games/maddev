@@ -107,6 +107,34 @@ enum
 	 * r/m and register (not 8-bit)
 	 */
 	INSN_RM_R,
+	
+	/**
+	 * first operand RAX, second operand immediate 32-bit value
+	 */
+	INSN_RAX_I32,
+	
+	/**
+	 * r/m and immediate value (8-bit)
+	 */
+	INSN_RM8_I8,
+	
+	/**
+	 * 16/32-bit r/m and immediate value (not 8-bit)
+	 */
+	INSN_RM16_I,
+	INSN_RM32_I,
+	
+	/**
+	 * 16/32-bit r/m and immediate 8-bit value
+	 */
+	INSN_RM_I8,
+	
+	/**
+	 * specific register and immediate operand of a matching size.
+	 */
+	INSN_AL_I,
+	INSN_AX_I,
+	INSN_EAX_I,
 };
 
 /**

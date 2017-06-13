@@ -80,9 +80,22 @@ InsnSpec insnList[] = {
 	
 	// actual x86 instructions as defined by Intel/AMD
 	{"aaa",		INSN_NONE,		"37",			INSN_LEG_ONLY},
-	{"syscall",	INSN_NONE,		"0F 05",		INSN_64},
-	{"pop",		INSN_R,			"58+r",			INSN_ALL_MODES | INSN_DEF64},
-	{"push",	INSN_R,			"50+r",			INSN_ALL_MODES | INSN_DEF64},
+	{"aad",		INSN_NONE,		"D5 0A",		INSN_LEG_ONLY},
+	{"aad",		INSN_IB,		"D5 ib",		INSN_LEG_ONLY},
+	{"aam",		INSN_NONE,		"D4 0A",		INSN_LEG_ONLY},
+	{"aam",		INSN_IB,		"D4 ib",		INSN_LEG_ONLY},
+	{"aas",		INSN_NONE,		"3F",			INSN_LEG_ONLY},
+	{"adc",		INSN_AL_I,		"14 ib",		INSN_ALL_MODES},
+	{"adc",		INSN_AX_I,		"15 iw",		INSN_ALL_MODES},
+	{"adc",		INSN_EAX_I,		"15 id",		INSN_ALL_MODES},
+	{"adc",		INSN_RM8_I8,		"80 /2 ib",		INSN_ALL_MODES},
+	{"adc",		INSN_RM16_I,		"80 /2 iw",		INSN_ALL_MODES},
+	{"adc",		INSN_RM32_I,		"80 /2 id",		INSN_ALL_MODES},
+	{"adc",		INSN_RM_I8,		"83 /2 ib",		INSN_ALL_MODES},
+	{"adc",		INSN_RM8_R8,		"10 /r",		INSN_ALL_MODES},
+	{"adc",		INSN_RM_R,		"11 /r",		INSN_ALL_MODES},
+	{"adc",		INSN_R8_RM8,		"12 /r",		INSN_ALL_MODES},
+	{"adc",		INSN_R_RM,		"13 /r",		INSN_ALL_MODES},
 	{"int",		INSN_IB,		"CD ib",		INSN_ALL_MODES},
 	{"mov",		INSN_R8_I8,		"B0+r ib",		INSN_ALL_MODES},
 	{"mov",		INSN_R16_I16,		"B8+r iw",		INSN_ALL_MODES},
@@ -93,6 +106,9 @@ InsnSpec insnList[] = {
 	{"mov",		INSN_R_RM,		"8B /r",		INSN_ALL_MODES},
 	{"mov",		INSN_RM8_R8,		"88 /r",		INSN_ALL_MODES},
 	{"mov",		INSN_RM_R,		"89 /r",		INSN_ALL_MODES},
+	{"syscall",	INSN_NONE,		"0F 05",		INSN_64},
+	{"pop",		INSN_R,			"58+r",			INSN_ALL_MODES | INSN_DEF64},
+	{"push",	INSN_R,			"50+r",			INSN_ALL_MODES | INSN_DEF64},
 	
 	// LIST TERMINATOR
 	{NULL, 0, NULL, 0}
