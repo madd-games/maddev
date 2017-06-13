@@ -268,6 +268,8 @@ int main(int argc, char *argv[])
 		
 		char *newline = strchr(line, '\n');
 		if (newline != NULL) *newline = 0;
+		newline = strchr(line, '\r');
+		if (newline != NULL) *newline = 0;
 		
 		while ((strchr(" \t", *line) != NULL) && (*line != 0)) line++;
 		
