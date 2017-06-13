@@ -41,22 +41,27 @@ typedef struct
 	/**
 	 * Offset into the section name string table, for the name of this section.
 	 */
-	off_t				nameoff;
+	int64_t				nameoff;
 	
 	/**
 	 * Offset into the section name string table, for the name of the relocation section.
 	 */
-	off_t				relnameoff;
+	int64_t				relnameoff;
 	
 	/**
 	 * Offset to the section data in the file (only for PROGBITS sections).
 	 */
-	off_t				dataOff;
+	int64_t				dataOff;
 	
 	/**
 	 * Offset to the relocation table in the file (only for PROGBITS sections).
 	 */
-	off_t				relOff;
+	int64_t				relOff;
+	
+	/**
+	 * Number of padding bytes to isnert at the start of this section.
+	 */
+	int64_t				padSize;
 	
 	/**
 	 * Number of relocations.

@@ -135,6 +135,18 @@ typedef	ObjBE64			Elf64_Sxword;
 #define ELF64_R_TYPE(i)		((i) & 0xffffffffL)
 #define ELF64_R_INFO(s, t)	(((s) << 32) + ((t) & 0xffffffffL))
 
+#define	PT_NULL			0
+#define	PT_LOAD			1
+#define	PT_DYNAMIC		2
+#define	PT_INTERP		3
+#define	PT_NOTE			4
+#define	PT_SHLIB		5
+#define	PT_PHDR			6
+
+#define	PF_X			0x1
+#define	PF_W			0x2
+#define	PF_R			0x4
+
 typedef struct
 {
 	unsigned char		e_ident[EI_NIDENT];
@@ -189,6 +201,18 @@ typedef struct
 	Elf64_Xword		r_info;
 	Elf64_Sxword		r_addend;
 } Elf64_Rela;
+
+typedef struct
+{
+	Elf64_Word		p_type;
+	Elf64_Word		p_flags;
+	Elf64_Off		p_offset;
+	Elf64_Addr		p_vaddr;
+	Elf64_Addr		p_paddr;
+	Elf64_Xword		p_filesz;
+	Elf64_Xword		p_memsz;
+	Elf64_Xword		p_align;
+} Elf64_Phdr;
 
 uint64_t elfGetReloc(int size, int type);
 

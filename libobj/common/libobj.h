@@ -162,6 +162,17 @@ typedef struct Section_
 	int					flags;
 	
 	/**
+	 * Virtual and physical addresses of section.
+	 */
+	uint64_t				vaddr;
+	uint64_t				paddr;
+	
+	/**
+	 * Alignment.
+	 */
+	uint64_t				align;
+	
+	/**
 	 * Auxillary information, produced by the backend.
 	 */
 	SectionAux				aux;

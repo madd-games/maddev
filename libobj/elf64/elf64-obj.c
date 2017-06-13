@@ -43,11 +43,11 @@ typedef struct
 	size_t				size;
 } StringTable;
 
-static off_t strtabPut(StringTable *table, const char *str)
+static int64_t strtabPut(StringTable *table, const char *str)
 {
 	table->data = (char*) realloc(table->data, table->size + strlen(str) + 1);
 	strcpy(table->data + table->size, str);
-	off_t result = (off_t) table->size;
+	int64_t result = (int64_t) table->size;
 	table->size += strlen(str) + 1;
 	return result;
 };
@@ -61,13 +61,17 @@ int objWrite(Object *obj, const char *filename)
 	 *  - symbol table
 	 *  - string table for the symbol table
 	 * Then for each libobj section, emit the section itself, and its relocation table.
+	 *
+	 * For program headers: it's PT_NULL plus a header for every section
 	 */
 	size_t numSections = 4;
+	size_t numProgHeads = 1;
 	Section *sect;
 	for (sect=obj->sections; sect!=NULL; sect=sect->next)
 	{
 		sect->aux.index = numSections;
 		numSections += 2;	/* section itself, and the relocation table */
+		numProgHeads++;
 	};
 	
 	/**
@@ -77,21 +81,24 @@ int objWrite(Object *obj, const char *filename)
 	 *
 	 * ELF64 Header
 	 * Section table
+	 * Program header table
 	 * Section name string table
 	 * Symbol table
 	 * String table for the symbol table
 	 * Array of section contents, each directly followed by its relocation table.
 	 */
-	off_t place = sizeof(Elf64_Ehdr) + numSections * sizeof(Elf64_Shdr);
+	int64_t place = sizeof(Elf64_Ehdr) + numSections * sizeof(Elf64_Shdr);
+	int64_t offProgHeads = place;
+	place += numProgHeads * sizeof(Elf64_Phdr);
 	
 	/**
 	 * Start with section names.
 	 */
 	StringTable sectNames = {NULL, 0};
 	strtabPut(&sectNames, "");
-	off_t offNameShstrtab = strtabPut(&sectNames, ".shstrtab");
-	off_t offNameStrtab = strtabPut(&sectNames, ".strtab");
-	off_t offNameSymtab = strtabPut(&sectNames, ".symtab");
+	int64_t offNameShstrtab = strtabPut(&sectNames, ".shstrtab");
+	int64_t offNameStrtab = strtabPut(&sectNames, ".strtab");
+	int64_t offNameSymtab = strtabPut(&sectNames, ".symtab");
 	for (sect=obj->sections; sect!=NULL; sect=sect->next)
 	{
 		sect->aux.nameoff = strtabPut(&sectNames, sect->name);
@@ -105,7 +112,7 @@ int objWrite(Object *obj, const char *filename)
 		free(buffer);
 	};
 	
-	off_t offShstrtab = place;
+	int64_t offShstrtab = place;
 	place += sectNames.size;
 	
 	/**
@@ -217,15 +224,19 @@ int objWrite(Object *obj, const char *filename)
 		};
 	};
 	
-	off_t offSymtab = place;
+	int64_t offSymtab = place;
 	place += numSymbols * sizeof(Elf64_Sym);
-	off_t offStrtab = place;
+	int64_t offStrtab = place;
 	place += symstrtab.size;
 	
 	for (sect=obj->sections; sect!=NULL; sect=sect->next)
 	{
 		if (sect->type == SECTYPE_PROGBITS)
 		{
+			uint64_t currentPlace = place;
+			place = (place + 0xFFF) & (~0xFFF);
+			
+			sect->aux.padSize = place - currentPlace;
 			sect->aux.dataOff = place;
 			place += sect->size;
 			sect->aux.relOff = place;
@@ -259,16 +270,30 @@ int objWrite(Object *obj, const char *filename)
 	elfHeader.e_ident[EI_VERSION] = EV_CURRENT;
 	elfHeader.e_ident[EI_OSABI] = ELFOSABI_SYSV;
 	elfHeader.e_ident[EI_ABIVERSION] = 0;
-	elfHeader.e_type = ELF_MAKE16(ET_REL);
+	switch (obj->type)
+	{
+	case OBJTYPE_RELOC:
+		elfHeader.e_type = ELF_MAKE16(ET_REL);
+		break;
+	case OBJTYPE_EXEC:
+		elfHeader.e_type = ELF_MAKE16(ET_EXEC);
+		break;
+	case OBJTYPE_SHARED:
+		elfHeader.e_type = ELF_MAKE16(ET_DYN);
+		break;
+	default:
+		elfHeader.e_type = ELF_MAKE16(ET_NONE);
+		break;
+	};
 	elfHeader.e_machine = ELF_MAKE16(ELF_MACHINE_NUMBER);
 	elfHeader.e_version = ELF_MAKE32(EV_CURRENT);
 	elfHeader.e_entry = ELF_MAKE64(0);
-	elfHeader.e_phoff = ELF_MAKE64(0);
+	elfHeader.e_phoff = ELF_MAKE64(offProgHeads);
 	elfHeader.e_shoff = ELF_MAKE64(sizeof(Elf64_Ehdr));
 	elfHeader.e_flags = ELF_MAKE32(0);
 	elfHeader.e_ehsize = ELF_MAKE16(sizeof(Elf64_Ehdr));
-	elfHeader.e_phentsize = ELF_MAKE16(0);
-	elfHeader.e_phnum = ELF_MAKE16(0);
+	elfHeader.e_phentsize = ELF_MAKE16(sizeof(Elf64_Phdr));
+	elfHeader.e_phnum = ELF_MAKE16(numProgHeads);
 	elfHeader.e_shentsize = ELF_MAKE16(sizeof(Elf64_Shdr));
 	elfHeader.e_shnum = ELF_MAKE16(numSections);
 	elfHeader.e_shstrndx = ELF_MAKE16(SHN_SHSTRTAB);
@@ -311,7 +336,9 @@ int objWrite(Object *obj, const char *filename)
 	elfSect.sh_size = ELF_MAKE64(symstrtab.size);
 	fwrite(&elfSect, 1, sizeof(Elf64_Shdr), fp);
 	
-	/* other sections TODO */
+	/* other sections */
+	char zeroPage[0x1000];
+	memset(zeroPage, 0, 0x1000);
 	size_t index = 4;
 	for (sect=obj->sections; sect!=NULL; sect=sect->next)
 	{
@@ -362,6 +389,37 @@ int objWrite(Object *obj, const char *filename)
 		index += 2;
 	};
 	
+	/* program header table */
+	Elf64_Phdr phdr;
+	memset(&phdr, 0, sizeof(Elf64_Phdr));
+	fwrite(&phdr, 1, sizeof(Elf64_Phdr), fp);
+	for (sect=obj->sections; sect!=NULL; sect=sect->next)
+	{
+		phdr.p_type = ELF_MAKE32(PT_LOAD);
+		
+		int flags;
+		if (sect->flags & SEC_READ) flags |= PF_R;
+		if (sect->flags & SEC_WRITE) flags |= PF_W;
+		if (sect->flags & SEC_EXEC) flags |= PF_X;
+		
+		phdr.p_flags = ELF_MAKE32(flags);
+		phdr.p_offset = ELF_MAKE64(sect->aux.dataOff);
+		phdr.p_vaddr = ELF_MAKE64(sect->vaddr);
+		phdr.p_paddr = ELF_MAKE64(sect->paddr);
+		
+		if (sect->type == SECTYPE_NOBITS)
+		{
+			phdr.p_filesz = ELF_MAKE64(0);
+		}
+		else
+		{
+			phdr.p_filesz = ELF_MAKE64(sect->size);
+		};
+		
+		phdr.p_align = ELF_MAKE64(sect->align);
+		fwrite(&phdr, 1, sizeof(Elf64_Phdr), fp);
+	};
+	
 	/* section name string table */
 	fwrite(sectNames.data, 1, sectNames.size, fp);
 	
@@ -376,6 +434,7 @@ int objWrite(Object *obj, const char *filename)
 	{
 		if (sect->type == SECTYPE_PROGBITS)
 		{
+			fwrite(zeroPage, 1, sect->aux.padSize, fp);
 			fwrite(sect->data, 1, sect->size, fp);
 			
 			Reloc *reloc;

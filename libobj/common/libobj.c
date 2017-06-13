@@ -36,6 +36,7 @@ Object* objNew()
 	Object *obj = (Object*) malloc(sizeof(Object));
 	obj->sections = NULL;
 	obj->symbols = NULL;
+	obj->type = OBJTYPE_RELOC;
 	return obj;
 };
 
@@ -59,6 +60,9 @@ Section* objCreateSection(Object *obj, const char *name, int type, int flags)
 	sect->relocs = NULL;
 	sect->type = type;
 	sect->flags = flags;
+	sect->vaddr = 0;
+	sect->paddr = 0;
+	sect->align = 0x1000;
 	
 	sect->next = obj->sections;
 	obj->sections = sect;
@@ -84,7 +88,7 @@ int objSectionReloc(Section *sect, const char *symbol, int size, int type, int64
 	Reloc *reloc = (Reloc*) malloc(sizeof(Reloc));
 	reloc->type = type;
 	reloc->size = size;
-	reloc->offset = (off_t) sect->size;
+	reloc->offset = (int64_t) sect->size;
 	reloc->symbol = strdup(symbol);
 	reloc->addend = addend;
 	
@@ -115,7 +119,7 @@ int objAddSymbol(Object *obj, Section *sect, const char *name)
 		{
 			if (sym->offset == -1)
 			{
-				sym->offset = (off_t) sect->size;
+				sym->offset = (int64_t) sect->size;
 				sym->sect = sect;
 				return 0;
 			}
@@ -129,7 +133,7 @@ int objAddSymbol(Object *obj, Section *sect, const char *name)
 	sym = (Symbol*) malloc(sizeof(Symbol));
 	sym->name = strdup(name);
 	sym->flags = 0;
-	sym->offset = (off_t) sect->size;
+	sym->offset = (int64_t) sect->size;
 	sym->size = 0;
 	sym->binding = SYMB_LOCAL;
 	sym->type = SYMT_NONE;
