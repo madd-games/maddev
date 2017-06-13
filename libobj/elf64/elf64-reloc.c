@@ -39,12 +39,12 @@ static RelocMapping relocTypes[] = {
 #if ELF_MACHINE_NUMBER == 62					/* x86_64 */
 	{REL_BYTE,  REL_X86_ABSOLUTE,	14},			/* R_X86_64_8 */
 	{REL_WORD,  REL_X86_ABSOLUTE,	12},			/* R_X86_64_16 */
-	{REL_DWORD, REL_X86_ABSOLUTE,	10},			/* R_X86_64_32 */
+	{REL_DWORD, REL_X86_ABSOLUTE,	11},			/* R_X86_64_32S */
 	{REL_QWORD, REL_X86_ABSOLUTE,	1},			/* R_X86_64_64 */
 	
 	{REL_BYTE,  REL_X86_RELATIVE,	15},			/* R_X86_64_PC8 */
 	{REL_WORD,  REL_X86_RELATIVE,	13},			/* R_X86_64_PC16 */
-	{REL_DWORD, REL_X86_RELATIVE,	11},			/* R_X86_64_32S */
+	{REL_DWORD, REL_X86_RELATIVE,	2},			/* R_X86_64_PC32 */
 #endif
 	{-1, -1, 0}						/* list terminator */
 };

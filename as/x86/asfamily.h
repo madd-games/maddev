@@ -55,6 +55,7 @@ enum
 	OPTYPE_REXGPR,
 	OPTYPE_IMM,
 	OPTYPE_OFFSET,
+	OPTYPE_MEMREF,
 };
 
 /**
@@ -63,7 +64,7 @@ enum
 enum
 {
 	INSN_NONE,			// no operand
-	INSN_R,
+	INSN_R,				// single register operand
 	
 	/**
 	 * For immediate operands, list the instructions in preferred size order; usually 32-bit first
@@ -96,6 +97,16 @@ enum
 	 * Register and r/m (not 8-bit).
 	 */
 	INSN_R_RM,
+	
+	/**
+	 * r/m and register (8-bit)
+	 */
+	INSN_RM8_R8,
+	
+	/**
+	 * r/m and register (not 8-bit)
+	 */
+	INSN_RM_R,
 };
 
 /**
@@ -117,6 +128,8 @@ typedef struct
 	 * Machine code specification. Single-space-separated list of bytes/entries.
 	 * XX		; a 2-digit hex number specifies a literal byte. Example: 05
 	 * XX+r		; (single register operand) the byte XX with register number added.
+	 * /r		; ModR/M and SIB/displacement if necessary
+	 * ib/iw/id/iq	; immediate byte/word/dword/quadword
 	 */
 	const char *mspec;
 	

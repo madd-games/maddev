@@ -91,6 +91,8 @@ InsnSpec insnList[] = {
 	{"movabs",	INSN_R64_I64,		"B8+r iq",		INSN_ALL_MODES},
 	{"mov",		INSN_R8_RM8,		"8A /r",		INSN_ALL_MODES},
 	{"mov",		INSN_R_RM,		"8B /r",		INSN_ALL_MODES},
+	{"mov",		INSN_RM8_R8,		"88 /r",		INSN_ALL_MODES},
+	{"mov",		INSN_RM_R,		"89 /r",		INSN_ALL_MODES},
 	
 	// LIST TERMINATOR
 	{NULL, 0, NULL, 0}
