@@ -131,14 +131,14 @@ enum
 	/**
 	 * xmm register + r/m
 	 */
-	INSN_XMM_RM
+	INSN_XMM_RM,
 	
 	/**
 	 * two xmm/ymm/zmm register operands + r/m 
 	 */
-	INSN_XMM_XMM_RM
-	INSN_YMM_YMM_RM
-	INSN_ZMM_ZMM_RM
+	INSN_XMM_XMM_RM,
+	INSN_YMM_YMM_RM,
+	INSN_ZMM_ZMM_RM,
 	
 };
 
