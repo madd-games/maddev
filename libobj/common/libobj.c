@@ -37,6 +37,7 @@ Object* objNew()
 	obj->sections = NULL;
 	obj->symbols = NULL;
 	obj->type = OBJTYPE_RELOC;
+	obj->entry = NULL;
 	return obj;
 };
 

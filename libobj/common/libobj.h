@@ -243,6 +243,11 @@ typedef struct
 	 * Object type (OBJTYPE_*). Default is OBJTYPE_RELOC.
 	 */
 	int					type;
+	
+	/**
+	 * Name of the entry symbol (on the heap), or NULL if unspecified.
+	 */
+	char*					entry;
 } Object;
 
 /**
@@ -325,5 +330,12 @@ void objSymbolSize(Object *obj, const char *name, size_t size);
  * success, or an error number on error.
  */
 int objWrite(Object *obj, const char *filename);
+
+/**
+ * Read an object description from an object file. This is implemented by the backend. Returns NULL on
+ * error. This reads exact contents from the file; in order to attempt converting into a relocatable
+ * object file (e.g. to implicitly create an import library), use objImport().
+ */
+Object* objRead(const char *filename);
 
 #endif

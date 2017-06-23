@@ -287,7 +287,35 @@ int objWrite(Object *obj, const char *filename)
 	};
 	elfHeader.e_machine = ELF_MAKE16(ELF_MACHINE_NUMBER);
 	elfHeader.e_version = ELF_MAKE32(EV_CURRENT);
-	elfHeader.e_entry = ELF_MAKE64(0);
+	if (obj->entry == NULL)
+	{
+		elfHeader.e_entry = ELF_MAKE64(0);
+	}
+	else
+	{
+		// find the entry symbol
+		Symbol *sym;
+		for (sym=obj->symbols; sym!=NULL; sym=sym->next)
+		{
+			if (sym->binding == SYMB_GLOBAL)
+			{
+				if (strcmp(sym->name, obj->entry) == 0)
+				{
+					break;
+				};
+			};
+		};
+		
+		if (sym == NULL)
+		{
+			fprintf(stderr, "libobj: cannot find entry symbol `%s': setting to undefined\n", obj->entry);
+			elfHeader.e_entry = ELF_MAKE64(0);
+		}
+		else
+		{
+			elfHeader.e_entry = ELF_MAKE64(sym->sect->vaddr + sym->offset);
+		};
+	};
 	elfHeader.e_phoff = ELF_MAKE64(offProgHeads);
 	elfHeader.e_shoff = ELF_MAKE64(sizeof(Elf64_Ehdr));
 	elfHeader.e_flags = ELF_MAKE32(0);
@@ -367,6 +395,8 @@ int objWrite(Object *obj, const char *filename)
 		
 		elfSect.sh_flags = ELF_MAKE64(flags);
 		elfSect.sh_size = ELF_MAKE64(sect->size);
+		elfSect.sh_addr = ELF_MAKE64(sect->vaddr);
+		elfSect.sh_addralign = ELF_MAKE64(sect->align);
 		fwrite(&elfSect, 1, sizeof(Elf64_Shdr), fp);
 		
 		// now the relocation table

@@ -51,12 +51,12 @@ typedef	ObjLE64			Elf64_Xword;
 typedef	ObjLE64			Elf64_Sxword;
 #elif defined(ELF_ARCH_BE)
 #define	ELF_TARGET_DATA		ELFDATA2MSB
-#define	ELF_MAKE16		OBJ_MAKE_LE16
-#define	ELF_MAKE32		OBJ_MAKE_LE32
-#define	ELF_MAKE64		OBJ_MAKE_LE64
-#define	ELF_READ16		OBJ_READ_LE16
-#define	ELF_READ32		OBJ_READ_LE32
-#define	ELF_READ64		OBJ_READ_LE64
+#define	ELF_MAKE16		OBJ_MAKE_BE16
+#define	ELF_MAKE32		OBJ_MAKE_BE32
+#define	ELF_MAKE64		OBJ_MAKE_BE64
+#define	ELF_READ16		OBJ_READ_BE16
+#define	ELF_READ32		OBJ_READ_BE32
+#define	ELF_READ64		OBJ_READ_BE64
 typedef	ObjBE64			Elf64_Addr;
 typedef	ObjBE64			Elf64_Off;
 typedef	ObjBE16			Elf64_Half;

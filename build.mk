@@ -1,5 +1,5 @@
 .PHONY: all tests
-all: out/mac out/libobj.a out/embed out/libcommon.a out/liblex.a out/as build/bnfc out/bnfc
+all: out/mac out/libobj.a out/embed out/libcommon.a out/liblex.a out/as build/bnfc out/bnfc out/objdump
 
 # Include all other build files here
 include $(SRCDIR)/mac/mac.mk
@@ -10,3 +10,4 @@ include $(SRCDIR)/liblex/liblex.mk
 include $(SRCDIR)/tests/tests.mk
 include $(SRCDIR)/as/as.mk
 include $(SRCDIR)/bnfc/bnfc.mk
+include $(SRCDIR)/objdump/objdump.mk

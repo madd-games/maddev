@@ -53,6 +53,7 @@ enum
 	OPTYPE_NONE,
 	OPTYPE_GPR,
 	OPTYPE_REXGPR,
+	OPTYPE_XMM,
 	OPTYPE_IMM,
 	OPTYPE_OFFSET,
 	OPTYPE_MEMREF,
@@ -99,6 +100,11 @@ enum
 	INSN_R_RM,
 	
 	/**
+	 * Register and r/m (neither 8-bit nor 16-bit).
+	 */
+	INSN_R_RM_NO16,
+	
+	/**
 	 * r/m and register (8-bit)
 	 */
 	INSN_RM8_R8,
@@ -110,6 +116,7 @@ enum
 	
 	/**
 	 * first operand RAX, second operand immediate 32-bit value
+	 * TODO: implement this optimisation
 	 */
 	INSN_RAX_I32,
 	
@@ -119,27 +126,19 @@ enum
 	INSN_RM8_I8,
 	INSN_RM16_I16,
 	INSN_RM32_I32,
-	
-	
+
 	/**
 	 * specific register and immediate operand of a matching size.
+	 * TODO: implement this optimisation
 	 */
 	INSN_AL_I,
 	INSN_AX_I,
 	INSN_EAX_I,
 	
 	/**
-	 * xmm register + r/m
+	 * xmm register (or 2 of them) + r/m
 	 */
 	INSN_XMM_RM,
-	
-	/**
-	 * two xmm/ymm/zmm register operands + r/m 
-	 */
-	INSN_XMM_XMM_RM,
-	INSN_YMM_YMM_RM,
-	INSN_ZMM_ZMM_RM,
-	
 };
 
 /**
@@ -148,7 +147,8 @@ enum
 typedef struct
 {
 	/**
-	 * Mnemonic.
+	 * Mnemonic. If it starts with "*", an optional "v" may be present at the beginning.
+	 * (for example *addpd matches 'addpd' and 'vaddpd').
 	 */
 	const char *mnemonic;
 	

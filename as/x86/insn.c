@@ -73,10 +73,10 @@ RegSpec rexgprList[16] = {
 InsnSpec insnList[] = {
 	// special pseudo-instructions, for inserting data etc. Those may be different for other
 	// assembly families. see documentation.
-	{"db",		INSN_IB,		"ib",			INSN_ALL_MODES},
-	{"dw",		INSN_IW,		"iw",			INSN_ALL_MODES},
-	{"dd",		INSN_ID,		"id",			INSN_ALL_MODES},
-	{"dq",		INSN_IQ,		"iq",			INSN_ALL_MODES},
+	{"db",		INSN_IB,		"ib",				INSN_ALL_MODES},
+	{"dw",		INSN_IW,		"iw",				INSN_ALL_MODES},
+	{"dd",		INSN_ID,		"id",				INSN_ALL_MODES},
+	{"dq",		INSN_IQ,		"iq",				INSN_ALL_MODES},
 	
 	// actual x86 instructions as defined by Intel/AMD
 	{"aaa",		INSN_NONE,		"37",				INSN_LEG_ONLY},
@@ -95,7 +95,7 @@ InsnSpec insnList[] = {
 	{"adc",		INSN_RM_R,		"11 /r",			INSN_ALL_MODES},
 	{"adc",		INSN_R8_RM8,		"12 /r",			INSN_ALL_MODES},
 	{"adc",		INSN_R_RM,		"13 /r",			INSN_ALL_MODES},
-	{"adcx",	INSN_R_RM,		"0F 38 F6 /r",			INSN_ALL_MODES},
+	{"adcx",	INSN_R_RM_NO16,		"66 0F 38 F6 /r",		INSN_ALL_MODES},
 	{"add",		INSN_AL_I,		"04 ib",			INSN_ALL_MODES},
 	{"add",		INSN_AX_I,		"05 iw",			INSN_ALL_MODES},
 	{"add",		INSN_EAX_I,		"05 id",			INSN_ALL_MODES},
@@ -104,16 +104,9 @@ InsnSpec insnList[] = {
 	{"add",		INSN_RM32_I32,		"81 /0 id",			INSN_ALL_MODES},
 	{"add",		INSN_RM8_R8,		"00 /r",			INSN_ALL_MODES},
 	{"add",		INSN_RM_R,		"01 /r",			INSN_ALL_MODES},
-	{"add",		INSN_RM_R,		"01 /r",			INSN_ALL_MODES},
 	{"add",		INSN_R8_RM8,		"02 /r",			INSN_ALL_MODES},
 	{"add",		INSN_R_RM,		"03 /r",			INSN_ALL_MODES},
-	{"add",		INSN_R_RM,		"03 /r",			INSN_ALL_MODES},
-	{"addpd",	INSN_XMM_RM,		"0F 58 /R",			INSN_ALL_MODES},
-	{"vaddpd",	INSN_XMM_XMM_RM,	"VEX.NDS.128.66.0F.WIG 58 /r",	INSN_ALL_MODES},
-	{"vaddpd",	INSN_YMM_YMM_RM,	"VEX.NDS.256.66.0F.WIG 58 /r",	INSN_ALL_MODES},
-	{"vaddpd",	INSN_YMM_YMM_RM,	"EVEX.NDS.128.66.0F.W1 58 /r",	INSN_ALL_MODES},
-	{"vaddpd",	INSN_XMM_XMM_RM,	"EVEX.NDS.256.66.0F.W1 58 /r",	INSN_ALL_MODES},
-	{"vaddpd",	INSN_XMM_XMM_RM,	"EVEX.NDS.512.66.0F.W1 58 /r",	INSN_ALL_MODES},
+	{"*addpd",	INSN_XMM_RM,		"66 0F 58 /r",			INSN_ALL_MODES},
 	{"int",		INSN_IB,		"CD ib",			INSN_ALL_MODES},
 	{"mov",		INSN_R8_I8,		"B0+r ib",			INSN_ALL_MODES},
 	{"mov",		INSN_R16_I16,		"B8+r iw",			INSN_ALL_MODES},

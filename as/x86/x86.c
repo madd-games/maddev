@@ -56,6 +56,13 @@ typedef union
 	
 	struct
 	{
+		int type;		// OPTYPE_XMM
+		uint8_t num;		// register number (4 bits)
+		uint8_t opsz;		// operand size in bits (128, 256, 512)
+	} xmm;
+	
+	struct
+	{
 		int type;		// OPTYPE_IMM
 		long int value;
 	} imm;
@@ -198,6 +205,31 @@ static int parseOp(char *opspec, x86_Operand *op)
 		};
 	};
 
+	// XMM/YMM/ZMM
+	char regletter;
+	uint8_t mmno;
+	int count;
+	if (sscanf(opspec, "%cmm%hhu%n", &regletter, &mmno, &count) >= 2)
+	{
+		if (count == strlen(opspec))
+		{
+			if (mmno >= 16) return -1;
+			if ((x86_bits != 64) && (mmno >= 8)) return -1;
+			
+			op->xmm.type = OPTYPE_XMM;
+			op->xmm.num = mmno;
+			
+			switch (regletter)
+			{
+			case 'x':
+				op->xmm.opsz = 128;
+				return 0;
+			default:
+				return -1;
+			};
+		};
+	};
+	
 	char *endptr;
 	long int value = strtol(opspec, &endptr, 0);
 	if (*endptr == 0)
@@ -227,6 +259,10 @@ static int parseOp(char *opspec, x86_Operand *op)
 	else if (strcmp(sizename, "QWORD") == 0)
 	{
 		opsz = 64;
+	}
+	else if (strcmp(sizename, "XMMWORD") == 0)
+	{
+		opsz = 128;
 	}
 	else
 	{
@@ -382,12 +418,12 @@ void x86_EmitModRM(const char *filename, int lineno, x86_Operand *opA, x86_Opera
 {
 	Section *sect = asGetSection();
 	
-	if (((opA->type == OPTYPE_GPR) || (opA->type == OPTYPE_REXGPR)) && (opA->type == opB->type))
+	if (((opA->type == OPTYPE_GPR) || (opA->type == OPTYPE_REXGPR) || (opA->type == OPTYPE_XMM)) && (opA->type == opB->type))
 	{
 		uint8_t modrm = 0xC0 | ((opA->gpr.num & 0x7) << 3) | (opB->gpr.num & 0x7);
 		objSectionAppend(sect, &modrm, 1);
 	}
-	else if (((opA->type == OPTYPE_GPR) || (opA->type == OPTYPE_REXGPR)) && (opB->type == OPTYPE_MEMREF))
+	else if (opB->type == OPTYPE_MEMREF)
 	{
 		if (x86_bits == 64)
 		{
@@ -543,8 +579,6 @@ void x86_EmitModRM(const char *filename, int lineno, x86_Operand *opA, x86_Opera
 void x86_Emit(const char *filename, int lineno, const char *mspec, x86_Operand *opA, x86_Operand *opB, int flags, int types)
 {
 	Section *sect = asGetSection();
-	char buffer[256];
-	strcpy(buffer, mspec);
 	
 	// funny trick
 	if (types == INSN_RM_R)
@@ -577,10 +611,42 @@ void x86_Emit(const char *filename, int lineno, const char *mspec, x86_Operand *
 		};
 	};
 	
+	if ((types == INSN_RM16_I16) || (types == INSN_RM32_I32))
+	{
+		int bits;
+		if (types == INSN_RM16_I16) bits = 16;
+		else bits = 32;
+		
+		int defaultBits = x86_bits;
+		if (defaultBits == 64) defaultBits = 32;
+		
+		if (bits != defaultBits)
+		{
+			objSectionAppend(sect, "\x66", 1);
+		};
+	};
+	
+	// mandatory prefix (if any) must come before REX
+	if (memcmp(mspec, "66 ", 3) == 0)
+	{
+		objSectionAppend(sect, "\x66", 1);
+		mspec += 3;
+	}
+	else if (memcmp(mspec, "F3 ", 3) == 0)
+	{
+		objSectionAppend(sect, "\xF3", 1);
+		mspec += 3;
+	}
+	else if (memcmp(mspec, "F2 ", 3) == 0)
+	{
+		objSectionAppend(sect, "\xF2", 1);
+		mspec += 3;
+	};
+
 	// emit REX if necessary and if not already mandated elsewhere in the instruction
 	if (x86_bits == 64)
 	{
-		if (types == INSN_R_RM)
+		if (types == INSN_R_RM || types == INSN_XMM_RM)
 		{
 			uint8_t rex = 0x40;
 			if (opA->gpr.opsz == 64)
@@ -593,7 +659,7 @@ void x86_Emit(const char *filename, int lineno, const char *mspec, x86_Operand *
 				rex |= 0x4;
 			};
 			
-			if (opB->type == OPTYPE_REXGPR)
+			if (opB->type == OPTYPE_REXGPR || opB->type == OPTYPE_XMM)
 			{
 				if (opB->gpr.num & 0x8)
 				{
@@ -639,7 +705,87 @@ void x86_Emit(const char *filename, int lineno, const char *mspec, x86_Operand *
 			};
 		};
 	};
-	
+
+#if 0
+	// emit VEX when necessary
+	if (types == INSN_XMM_RM)
+	{
+		// unpacked fields
+		uint8_t ir = !(opA->xmm.num & 0x8);
+		uint8_t ix = 1;
+		uint8_t ib = 1;
+		uint8_t map = 1;
+		uint8_t we = 0;
+		uint8_t vreg = opA->xmm.num;
+		uint8_t l = 0;
+		uint8_t p = 0;
+		
+		if (opB->type == OPTYPE_XMM)
+		{
+			ib = !(opB->xmm.num & 0x8);
+		}
+		else
+		{
+			ix = !((opB->memref.idx & 0x8) && (opB->memref.idx != 0xFF));
+			ib = !((opB->memref.base & 0x8) && (opB->memref.base != 0xFF) && (opB->memref.base != 0x10));
+		};
+		
+		// check if VEX is needed here
+		if ((ir != 1) || (ix != 1) || (ib != 1) || (l != 0) || (vreg != opA->xmm.num))
+		{
+			vreg = (~vreg) & 0xF;
+			// detect mandatory prefix
+			if (memcmp(mspec, "66 ", 3) == 0)
+			{
+				p = 1;
+				mspec += 3;
+			}
+			else if (memcmp(mspec, "F3 ", 3) == 0)
+			{
+				p = 2;
+				mspec += 3;
+			}
+			else if (memcmp(mspec, "F2 ", 3) == 0)
+			{
+				p = 3;
+				mspec += 3;
+			}
+			else
+			{
+				p = 0;
+			};
+			
+			// detect opcode map
+			if (memcmp(mspec, "0F 38 ", 6) == 0)
+			{
+				map = 2;
+				mspec += 6;
+			}
+			else if (memcmp(mspec, "0F 3A ", 6) == 0)
+			{
+				map = 3;
+				mspec += 6;
+			}
+			else if (memcmp(mspec, "0F ", 3) == 0)
+			{
+				map = 1;
+				mspec += 3;
+			};
+			
+			// format
+			uint8_t vex[3];
+			vex[0] = 0xC4;
+			vex[1] = (ir << 7) | (ix << 6) | (ib << 5) | map;
+			vex[2] = (we << 7) | (vreg << 6) | (l << 2) | p;
+			
+			objSectionAppend(sect, vex, 3);
+		};
+	};
+#endif
+
+	char buffer[256];
+	strcpy(buffer, mspec);
+
 	char *bytespec;
 	for (bytespec=strtok(buffer, " "); bytespec!=NULL; bytespec=strtok(NULL, " "))
 	{
@@ -825,6 +971,16 @@ void x86_Emit(const char *filename, int lineno, const char *mspec, x86_Operand *
 		{
 			x86_EmitModRM(filename, lineno, opA, opB);
 		}
+		else if ((strlen(bytespec) == 2) && (bytespec[0] == '/') && (bytespec[1] >= '0') && (bytespec[1] <= '7'))
+		{
+			x86_Operand fakeop;
+			fakeop.gpr.type = OPTYPE_GPR;
+			fakeop.gpr.num = bytespec[1] - '0';
+			fakeop.gpr.opsz = opA->gpr.opsz;
+			if (opA->type == OPTYPE_MEMREF) fakeop.gpr.opsz = opA->memref.opsz;
+			
+			x86_EmitModRM(filename, lineno, &fakeop, opA);
+		}
 		else
 		{
 			asDiag(filename, lineno, ML_ERROR, "invalid bytespec in encoding: '%s'\n", bytespec);
@@ -864,6 +1020,33 @@ int isR_RM(x86_Operand *opA, x86_Operand *opB, int expect8)
 	};
 	
 	return 0;
+};
+
+static int isRM_I(x86_Operand *opA, x86_Operand *opB, int opsz)
+{
+	switch (opA->type)
+	{
+	case OPTYPE_GPR:
+	case OPTYPE_REXGPR:
+		if (opA->gpr.opsz != opsz) return 0;
+		break;
+	case OPTYPE_MEMREF:
+		if (opA->memref.opsz != opsz) return 0;
+		break;
+	default:
+		return 0;
+	};
+	
+	switch (opB->type)
+	{
+	case OPTYPE_IMM:
+		return 1;
+	case OPTYPE_OFFSET:
+		return opB->offset.opsz == opsz;
+		break;
+	default:
+		return 0;
+	};
 };
 
 int x86_OpTypeMatch(int types, x86_Operand *opA, x86_Operand *opB)
@@ -913,12 +1096,23 @@ int x86_OpTypeMatch(int types, x86_Operand *opA, x86_Operand *opB)
 		return isR_RM(opA, opB, 1);
 	case INSN_R_RM:
 		return isR_RM(opA, opB, 0);
+	case INSN_R_RM_NO16:
+		return isR_RM(opA, opB, 0) && (opA->gpr.opsz != 16);
 	case INSN_RM8_R8:
 		return ((typeA == OPTYPE_MEMREF) && ((typeB == OPTYPE_GPR) || (typeB == OPTYPE_REXGPR)))
 			&& (opA->memref.opsz == opB->gpr.opsz) && (opA->memref.opsz == 8);
 	case INSN_RM_R:
 		return ((typeA == OPTYPE_MEMREF) && ((typeB == OPTYPE_GPR) || (typeB == OPTYPE_REXGPR)))
 			&& (opA->memref.opsz == opB->gpr.opsz) && (opA->memref.opsz != 8);
+	case INSN_XMM_RM:
+		return (typeA == OPTYPE_XMM) && ((typeB == OPTYPE_XMM)
+			|| ((typeB == OPTYPE_MEMREF) && (opB->memref.opsz == 128)));
+	case INSN_RM8_I8:
+		return isRM_I(opA, opB, 8);
+	case INSN_RM16_I16:
+		return isRM_I(opA, opB, 16);
+	case INSN_RM32_I32:
+		return isRM_I(opA, opB, 32);
 	default:
 		return 0;
 	};
@@ -942,6 +1136,20 @@ void tryRexConvert(x86_Operand *op)
 				op->type = OPTYPE_REXGPR;
 			};
 		};
+	};
+};
+
+int x86_MatchMnemonic(const char *spec, const char *mnemonic)
+{
+	if (spec[0] == '*')
+	{
+		if (mnemonic[0] == 'v') mnemonic++;
+		spec++;
+		return strcmp(spec, mnemonic) == 0;
+	}
+	else
+	{
+		return strcmp(spec, mnemonic) == 0;
 	};
 };
 
@@ -1019,7 +1227,7 @@ void FamilyAssemble(const char *filename, int lineno, char *line)
 		
 		if (insn->flags & flagNeeded)
 		{
-			if (strcmp(insn->mnemonic, mnemonic) == 0)
+			if (x86_MatchMnemonic(insn->mnemonic, mnemonic))
 			{
 				insnFound = 1;
 			
