@@ -418,7 +418,8 @@ void x86_EmitModRM(const char *filename, int lineno, x86_Operand *opA, x86_Opera
 {
 	Section *sect = asGetSection();
 	
-	if (((opA->type == OPTYPE_GPR) || (opA->type == OPTYPE_REXGPR) || (opA->type == OPTYPE_XMM)) && (opA->type == opB->type))
+	if (((opA->type == OPTYPE_GPR) || (opA->type == OPTYPE_REXGPR) || (opA->type == OPTYPE_XMM)) &&
+		((opB->type == OPTYPE_GPR) || (opB->type == OPTYPE_REXGPR) || (opB->type == OPTYPE_XMM)))
 	{
 		uint8_t modrm = 0xC0 | ((opA->gpr.num & 0x7) << 3) | (opB->gpr.num & 0x7);
 		objSectionAppend(sect, &modrm, 1);
@@ -973,13 +974,16 @@ void x86_Emit(const char *filename, int lineno, const char *mspec, x86_Operand *
 		}
 		else if ((strlen(bytespec) == 2) && (bytespec[0] == '/') && (bytespec[1] >= '0') && (bytespec[1] <= '7'))
 		{
+			x86_Operand *otherOp = opA;
+			if (opA->type == OPTYPE_IMM || opA->type == OPTYPE_OFFSET) otherOp = opB;
+			
 			x86_Operand fakeop;
 			fakeop.gpr.type = OPTYPE_GPR;
 			fakeop.gpr.num = bytespec[1] - '0';
-			fakeop.gpr.opsz = opA->gpr.opsz;
-			if (opA->type == OPTYPE_MEMREF) fakeop.gpr.opsz = opA->memref.opsz;
+			fakeop.gpr.opsz = otherOp->gpr.opsz;
+			if (otherOp->type == OPTYPE_MEMREF) fakeop.gpr.opsz = otherOp->memref.opsz;
 			
-			x86_EmitModRM(filename, lineno, &fakeop, opA);
+			x86_EmitModRM(filename, lineno, &fakeop, otherOp);
 		}
 		else
 		{
@@ -1043,6 +1047,31 @@ static int isRM_I(x86_Operand *opA, x86_Operand *opB, int opsz)
 		return 1;
 	case OPTYPE_OFFSET:
 		return opB->offset.opsz == opsz;
+		break;
+	default:
+		return 0;
+	};
+};
+
+static int isRM_I8(x86_Operand *opA, x86_Operand *opB)
+{
+	switch (opA->type)
+	{
+	case OPTYPE_GPR:
+	case OPTYPE_REXGPR:
+		break;
+	case OPTYPE_MEMREF:
+		break;
+	default:
+		return 0;
+	};
+	
+	switch (opB->type)
+	{
+	case OPTYPE_IMM:
+		return 1;
+	case OPTYPE_OFFSET:
+		return opB->offset.opsz == 8;
 		break;
 	default:
 		return 0;
@@ -1113,6 +1142,8 @@ int x86_OpTypeMatch(int types, x86_Operand *opA, x86_Operand *opB)
 		return isRM_I(opA, opB, 16);
 	case INSN_RM32_I32:
 		return isRM_I(opA, opB, 32);
+	case INSN_RM_I8:
+		return isRM_I8(opA, opB);
 	default:
 		return 0;
 	};

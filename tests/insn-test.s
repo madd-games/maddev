@@ -36,3 +36,53 @@ add ecx, DWORD PTR test		; MODE16 MODE32 MODE64
 add rcx, QWORD PTR test		; MODE64
 addpd xmm1, xmm2		; MODE16 MODE32 MODE64
 addpd xmm3, XMMWORD PTR test	; MODE32 MODE64
+addps xmm5, xmm2		; MODE16 MODE32 MODE64
+addsd xmm6, xmm4		; MODE16 MODE32 MODE64
+addss xmm0, xmm2		; MODE16 MODE32 MODE64
+addsubpd xmm1, xmm3		; MODE16 MODE32 MODE64
+addsubps xmm2, xmm4		; MODE16 MODE32 MODE64
+adox ecx, ebx			; MODE16 MODE32 MODE64
+aesdec xmm1, xmm5		; MODE16 MODE32 MODE64
+aesdeclast xmm5, xmm4		; MODE16 MODE32 MODE64
+aesenc xmm6, xmm7		; MODE16 MODE32 MODE64
+aesenclast xmm5, xmm1		; MODE16 MODE32 MODE64
+aesimc xmm0, xmm2		; MODE16 MODE32 MODE64
+; TODO: aeskeygenassist
+and al, 0x67			; MODE16 MODE32 MODE64
+and DWORD PTR test, 0xdead	; MODE16 MODE32 MODE64
+and eax, DWORD PTR test		; MODE16 MODE32 MODE64
+; TODO: andn
+andpd xmm1, xmm2		; MODE16 MODE32 MODE64
+andps xmm2, xmm5		; MODE16 MODE32 MODE64
+andnpd xmm3, xmm2		; MODE16 MODE32 MODE64
+arpl ax, bx			; MODE16 MODE32
+; TODO: blendpd
+; TODO: bextr
+; TODO: blendps
+blendvpd xmm1, xmm5		; MODE16 MODE32 MODE64
+; TODO: vblendvpd
+; TODO: blsi
+; TODO: blsmk
+; TODO: blsr
+; TODO: bndcl
+; TODO: bndcu
+; TODO: bndcn
+; TODO: bndldx
+; TODO: bndmk
+; TODO: bndmov
+; TODO: bndstx
+bound eax, DWORD PTR test	; MODE16 MODE32
+bsf eax, DWORD PTR test		; MODE16 MODE32 MODE64
+bsr eax, DWORD PTR test		; MODE16 MODE32 MODE64
+bswap rdx			; MODE16 MODE32 MODE64
+bt DWORD PTR test, eax		; MODE16 MODE32 MODE64
+bt al, 6			; MODE16 MODE32 MODE64
+bt ax, 7			; MODE16 MODE32 MODE64
+bt eax, 7			; MODE16 MODE32 MODE64
+bt rax, 8			; MODE64
+btc DWORD PTR test, eax		; MODE16 MODE32 MODE64
+btc eax, 6			; MODE16 MODE32 MODE64
+btr DWORD PTR test, eax		; MODE16 MODE32 MODE64
+btr eax, 5			; MODE16 MODE32 MODE64
+bts DWORD PTR test, eax		; MODE16 MODE32 MODE64
+bts eax, 5			; MODE16 MODE32 MODE64

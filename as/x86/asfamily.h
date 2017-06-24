@@ -115,21 +115,23 @@ enum
 	INSN_RM_R,
 	
 	/**
-	 * first operand RAX, second operand immediate 32-bit value
-	 * TODO: implement this optimisation
-	 */
-	INSN_RAX_I32,
-	
-	/**
 	 * r/m and immediate value operand of a matching size
+	 * NOTE: INSN_RM32_I32 also accepts a 64-bit r/m with an 32-bit
+	 * sign-extended immediate.
 	 */
 	INSN_RM8_I8,
 	INSN_RM16_I16,
 	INSN_RM32_I32,
-
+	
+	/**
+	 * r/m (any size) + 8-bit immediate operand.
+	 */
+	INSN_RM_I8,
+	
 	/**
 	 * specific register and immediate operand of a matching size.
 	 * TODO: implement this optimisation
+	 * NOTE: INSN_EAX_I also accepts RAX, with 32-bit sign-extended immediates.
 	 */
 	INSN_AL_I,
 	INSN_AX_I,
@@ -139,6 +141,33 @@ enum
 	 * xmm register (or 2 of them) + r/m
 	 */
 	INSN_XMM_RM,
+	
+	/**
+	 * XMM register + r/m + imm8 for some weird instructions.
+	 */
+	INSN_XMM_RM_IMM8,
+	
+	/**
+	 * XMM + XMM + r/m + XMM
+	 */
+	INSN_XMM4,
+	
+	/**
+	 * BND + r/m
+	 */
+	INSN_BND_RM,
+	
+	/**
+	 * BND + MIB
+	 */
+	INSN_BND_MIB,
+	INSN_MIB_BND,
+	
+	/**
+	 * BND + BND/M
+	 */
+	INSN_BND_BNDM,
+	INSN_BNDM_BND,
 };
 
 /**
