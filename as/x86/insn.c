@@ -166,12 +166,10 @@ InsnSpec insnList[] = {
 	{"bts",			INSN_RM_R,		"0F AB /r",				INSN_ALL_MODES},
 	{"bts",			INSN_RM_I8,		"0F BA /5 ib",				INSN_ALL_MODES},
 	// TODO: BZHI
-	{"call",		INSN_RM,		"E8 cw",				INSN_LEG_ONLY},
-	{"call",		INSN_RM,		"E8 cd",				INSN_ALL_MODES},
-	{"call",		INSN_RM,		"FF/2",					INSN_ALL_MODES},
-	{"call",		INSN_IMM_FAR,		"9A cd",				INSN_LEG_ONLY},
-	{"call",		INSN_IMM_FAR,		"9A cp",				INSN_LEG_ONLY},
-	{"call",		INSN_RM,		"FF /3",				INSN_ALL_MODES},
+	{"call",		INSN_IMM,		"E8 rel",				INSN_ALL_MODES},
+	{"call",		INSN_RM,		"FF /2",				INSN_ALL_MODES},
+	{"call",		INSN_IMM_FAR,		"9A relf",				INSN_LEG_ONLY},
+	{"callf",		INSN_RM,		"FF /3",				INSN_ALL_MODES}, // far call
 	{"cbw",			INSN_NONE,		"98",					INSN_ALL_MODES},
 	{"cwde",		INSN_NONE,		"98",					INSN_ALL_MODES},
 	{"cdqe",		INSN_NONE,		"48 98",				INSN_64},

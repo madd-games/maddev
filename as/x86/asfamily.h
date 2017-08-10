@@ -185,9 +185,14 @@ enum
 	INSN_RM_I,
 	
 	/**
-	 * mariuzs should comment this properly idk
+	 * Two R/M operands.
 	 */
 	INSN_RM_RM,
+	
+	/**
+	 * Single immediate operand of any size.
+	 */
+	INSN_IMM,
 };
 
 /**
