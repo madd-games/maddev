@@ -168,6 +168,26 @@ enum
 	 */
 	INSN_BND_BNDM,
 	INSN_BNDM_BND,
+	
+	/**
+	 * far absolute address
+	 */
+	INSN_IMM_FAR,
+	
+	/**
+	 * single r/m operand
+	 */
+	INSN_RM,
+	
+	/**
+	 * r/m + immediate value of matching size
+	 */
+	INSN_RM_I,
+	
+	/**
+	 * mariuzs should comment this properly idk
+	 */
+	INSN_RM_RM,
 };
 
 /**
