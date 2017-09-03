@@ -296,3 +296,25 @@ cvttss2si xmm4, XMMWORD PTR test		; MODE32 MODE64
 cwd						; MODE16 MODE32 MODE64
 cdq						; MODE16 MODE32 MODE64
 cqo						; MODE64
+daa						; MODE16 MODE32
+das						; MODE16 MODE32
+dec BYTE PTR test				; MODE16 MODE32 MODE64
+dec WORD PTR test				; MODE16 MODE32 MODE64
+dec DWORD PTR test				; MODE16 MODE32 MODE64
+dec QWORD PTR test				; MODE64
+dec al						; MODE16 MODE32
+dec ax						; MODE16 MODE32
+dec eax						; MODE16 MODE32
+div BYTE PTR test				; MODE16 MODE32 MODE64
+div WORD PTR test				; MODE16 MODE32 MODE64
+div DWORD PTR test				; MODE16 MODE32 MODE64
+div QWORD PTR test				; MODE64
+divpd xmm5, XMMWORD PTR test			; MODE32 MODE64
+divps xmm6, XMMWORD PTR test			; MODE32 MODE64
+divsd xmm7, XMMWORD PTR test			; MODE32 MODE64
+divss xmm0, XMMWORD PTR test			; MODE32 MODE64
+; TODO: dppd
+; TODO: dpps
+emms						; MODE16 MODE32 MODE64
+; TODO: enter
+; TODO: extractps

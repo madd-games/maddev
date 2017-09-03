@@ -148,6 +148,11 @@ enum
 	INSN_XMM_RM_IMM8,
 	
 	/**
+	 * r/m + XMM register + imm8 for some weird instructions.
+	 */
+	INSN_RM_XMM_IMM8,
+	
+	/**
 	 * XMM + XMM + r/m + XMM
 	 */
 	INSN_XMM4,
@@ -173,6 +178,11 @@ enum
 	 * far absolute address
 	 */
 	INSN_IMM_FAR,
+	
+	/**
+	 * single 8-bit r/m operand
+	 */
+	INSN_RM8,
 	
 	/**
 	 * single r/m operand
