@@ -138,6 +138,11 @@ enum
 	INSN_EAX_I,
 	
 	/**
+	 * specific register operand
+	 */
+	INSN_AX,
+	
+	/**
 	 * xmm register (or 2 of them) + r/m
 	 */
 	INSN_XMM_RM,
@@ -190,6 +195,11 @@ enum
 	INSN_RM,
 	
 	/**
+	 * single r/m operand of, uh, implied size basically
+	 */
+	INSN_RM_FIXED,
+	
+	/**
 	 * r/m + immediate value of matching size
 	 */
 	INSN_RM_I,
@@ -203,6 +213,24 @@ enum
 	 * Single immediate operand of any size.
 	 */
 	INSN_IMM,
+	
+	/**
+	 * Yeah I really don't know at this point
+	 */
+	INSN_ST,
+	INSN_ST0_ST,
+	INSN_ST_ST0,
+	
+	/**
+	 * I mean, I guess
+	 */
+	INSN_RM_FP32,
+	INSN_RM_FP64,
+	INSN_RM_FP80,
+	
+	INSN_RM_INT16
+	INSN_RM_INT32
+	INSN_RM_INT64
 };
 
 /**
