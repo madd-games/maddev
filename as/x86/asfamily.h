@@ -195,7 +195,7 @@ enum
 	INSN_RM,
 	
 	/**
-	 * single r/m operand of, uh, implied size basically
+	 * single r/m operand of implied size
 	 */
 	INSN_RM_FIXED,
 	
@@ -205,7 +205,7 @@ enum
 	INSN_RM_I,
 	
 	/**
-	 * Ask Mariuzs idk
+	 * Memory reference + XMM/rm ???
 	 */
 	INSN_MM_XMMRM,
 	
@@ -215,22 +215,22 @@ enum
 	INSN_IMM,
 	
 	/**
-	 * Yeah I really don't know at this point
+	 * Combinations of various FPU stack operands (ST = any ST, ST0 = only ST0).
 	 */
 	INSN_ST,
 	INSN_ST0_ST,
 	INSN_ST_ST0,
 	
 	/**
-	 * I mean, I guess
+	 * Memory references to specific sizes of operands.
 	 */
 	INSN_RM_FP32,
 	INSN_RM_FP64,
 	INSN_RM_FP80,
 	
-	INSN_RM_INT16
-	INSN_RM_INT32
-	INSN_RM_INT64
+	INSN_RM_INT16,
+	INSN_RM_INT32,
+	INSN_RM_INT64,
 };
 
 /**

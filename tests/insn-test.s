@@ -1,3 +1,7 @@
+bits 16						; MODE16
+bits 32						; MODE32
+bits 64						; MODE64
+
 aaa						; MODE16 MODE32
 aad						; MODE16 MODE32
 aad 0x56					; MODE16 MODE32

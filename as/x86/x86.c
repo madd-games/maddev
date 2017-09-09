@@ -1238,6 +1238,27 @@ void FamilyAssemble(const char *filename, int lineno, char *line)
 		tryRexConvert(&opA);
 	};
 	
+	if (strcmp(mnemonic, "bits") == 0)
+	{
+		if (opA.type != OPTYPE_IMM || opB.type != OPTYPE_NONE)
+		{
+			asDiag(filename, lineno, ML_ERROR, "x86 directive 'bits' expects an immediate operand");
+			return;
+		};
+		
+		switch (opA.imm.value)
+		{
+		case 16:
+		case 32:
+		case 64:
+			x86_bits = opA.imm.value;
+			return;
+		default:
+			asDiag(filename, lineno, ML_ERROR, "the operand to 'bits' must be 16, 32 or 64");
+			return;
+		};
+	};
+	
 	int insnFound = 0;
 	InsnSpec *insn;
 	for (insn=insnList; insn->mnemonic!=NULL; insn++)
