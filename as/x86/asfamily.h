@@ -57,7 +57,72 @@ enum
 	OPTYPE_IMM,
 	OPTYPE_OFFSET,
 	OPTYPE_MEMREF,
+	OPTYPE_ST,
 };
+
+#define OPSZ_FLOAT			0xF0
+#define	OPSZ_DOUBLE			0xF1
+#define	OPSZ_FPUWORD			0xF2
+
+/**
+ * NOTE: gpr, rexgpr and xmm must have the same format to help with ModR/M bytes.
+ */
+typedef union
+{
+	int type;
+	
+	struct
+	{
+		int type;		// OPTYPE_GPR
+		uint8_t num;		// register number (3 bits)
+		uint8_t	opsz;		// operand size in bits (8, 16, 32 or 64)
+	} gpr;
+	
+	struct
+	{
+		int type;		// OPTYPE_REXGPR
+		uint8_t num;		// register number (4 bits)
+		uint8_t	opsz;		// operand size in bits (8, 16, 32, or 64)
+	} rexgpr;
+	
+	struct
+	{
+		int type;		// OPTYPE_XMM
+		uint8_t num;		// register number (4 bits)
+		uint8_t opsz;		// operand size in bits (64, 128, 256, 512)
+	} xmm;
+	
+	struct
+	{
+		int type;		// OPTYPE_IMM
+		long int value;
+	} imm;
+	
+	struct
+	{
+		int type;		// OPTYPE_OFFSET
+		char *symbol;		// referenced symbol
+		int64_t addend;		// addend
+		uint8_t opsz;		// operand size in bits (8, 16, 32 or 64)
+	} offset;
+	
+	struct
+	{
+		int type;		// OPTYPE_OFFSET
+		int opsz;		// operand size in bits (8, 16, 32 or 64)
+		char *symbol;		// symbol (if any) or NULL
+		int64_t off;		// value to add to symbol
+		int scale;		// scale power (0 = 1, 1 = 2, 2 = 4, 3 = 8)
+		uint8_t idx;		// index register number
+		uint8_t base;		// base register number (0x10 = RIP, 0xFF = no base)
+	} memref;
+	
+	struct
+	{
+		int type;		// OPTYPE_ST
+		uint8_t num;		// register number (3 bits)
+	} st;
+} x86_Operand;
 
 /**
  * Types of operands in machine code.
@@ -190,7 +255,7 @@ enum
 	INSN_RM8,
 	
 	/**
-	 * single r/m operand
+	 * single r/m operand that is not 8-bit, with explicit size
 	 */
 	INSN_RM,
 	
@@ -198,11 +263,6 @@ enum
 	 * single r/m operand of implied size
 	 */
 	INSN_RM_FIXED,
-	
-	/**
-	 * r/m + immediate value of matching size
-	 */
-	INSN_RM_I,
 	
 	/**
 	 * Memory reference + XMM/rm ???
@@ -215,6 +275,11 @@ enum
 	INSN_IMM,
 	
 	/**
+	 * Relative offset operand.
+	 */
+	INSN_REL,
+	
+	/**
 	 * Combinations of various FPU stack operands (ST = any ST, ST0 = only ST0).
 	 */
 	INSN_ST,
@@ -222,7 +287,7 @@ enum
 	INSN_ST_ST0,
 	
 	/**
-	 * Memory references to specific sizes of operands.
+	 * Memory references to specific types of operands.
 	 */
 	INSN_RM_FP32,
 	INSN_RM_FP64,

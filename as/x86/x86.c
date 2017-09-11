@@ -36,57 +36,6 @@
 #include "libobj.h"
 #include "liblex.h"
 
-typedef union
-{
-	int type;
-	
-	struct
-	{
-		int type;		// OPTYPE_GPR
-		uint8_t num;		// register number (3 bits)
-		uint8_t	opsz;		// operand size in bits (8, 16, 32 or 64)
-	} gpr;
-	
-	struct
-	{
-		int type;		// OPTYPE_REXGPR
-		uint8_t num;		// register number (4 bits)
-		uint8_t	opsz;		// operand size in bits (8, 16, 32, or 64)
-	} rexgpr;
-	
-	struct
-	{
-		int type;		// OPTYPE_XMM
-		uint8_t num;		// register number (4 bits)
-		uint8_t opsz;		// operand size in bits (128, 256, 512)
-	} xmm;
-	
-	struct
-	{
-		int type;		// OPTYPE_IMM
-		long int value;
-	} imm;
-	
-	struct
-	{
-		int type;		// OPTYPE_OFFSET
-		char *symbol;		// referenced symbol
-		int64_t addend;		// addend
-		uint8_t opsz;		// operand size in bits (8, 16, 32 or 64)
-	} offset;
-	
-	struct
-	{
-		int type;		// OPTYPE_OFFSET
-		int opsz;		// operand size in bits (8, 16, 32 or 64)
-		char *symbol;		// symbol (if any) or NULL
-		int64_t off;		// value to add to symbol
-		int scale;		// scale power (0 = 1, 1 = 2, 2 = 4, 3 = 8)
-		uint8_t idx;		// index register number
-		uint8_t base;		// base register number (0x10 = RIP, 0xFF = no base)
-	} memref;
-} x86_Operand;
-
 int x86_bits = X86_DEFAULT_BITS;
 
 // translate a register name used in base/scale to its number. returns 0x10 for RIP (if allowRIP) and 0xFF for
@@ -205,10 +154,25 @@ static int parseOp(char *opspec, x86_Operand *op)
 		};
 	};
 
+	// XMM registers
+	uint8_t mmno;
+	int count = 0;
+	if (sscanf(opspec, "mm%hhu%n", &mmno, &count) >= 1)
+	{
+		if (count == strlen(opspec))
+		{
+			if (mmno >= 8) return -1;
+			
+			op->xmm.type = OPTYPE_XMM;
+			op->xmm.num = mmno;
+			op->xmm.opsz = 64;		// 64-bit MMX register
+			return 0;
+		};
+	};
+	
 	// XMM/YMM/ZMM
 	char regletter;
-	uint8_t mmno;
-	int count;
+	count = 0;
 	if (sscanf(opspec, "%cmm%hhu%n", &regletter, &mmno, &count) >= 2)
 	{
 		if (count == strlen(opspec))
@@ -230,6 +194,20 @@ static int parseOp(char *opspec, x86_Operand *op)
 		};
 	};
 	
+	// ST
+	if (sscanf(opspec, "st%hhu%n", &mmno, &count) >= 1)
+	{
+		if (count == strlen(opspec))
+		{
+			if (mmno >= 8) return -1;
+			
+			op->st.type = OPTYPE_ST;
+			op->st.num = mmno;
+			
+			return 0;
+		};
+	};
+	
 	char *endptr;
 	long int value = strtol(opspec, &endptr, 0);
 	if (*endptr == 0)
@@ -239,11 +217,12 @@ static int parseOp(char *opspec, x86_Operand *op)
 		return 0;
 	};
 	
-	// every other case: BYTE|WORD|DWORD|QWORD OFFSET|PTR ...
+	// every other case: [BYTE|WORD|DWORD|QWORD] OFFSET|PTR ...
 	uint8_t opsz;
 	char *sizename = strtok(opspec, " \t");
 	if (sizename == NULL) return -1;
 	
+	char *typename = NULL;
 	if (strcmp(sizename, "BYTE") == 0)
 	{
 		opsz = 8;
@@ -264,12 +243,26 @@ static int parseOp(char *opspec, x86_Operand *op)
 	{
 		opsz = 128;
 	}
+	else if (strcmp(sizename, "FLOAT") == 0)
+	{
+		opsz = OPSZ_FLOAT;
+	}
+	else if (strcmp(sizename, "DOUBLE") == 0)
+	{
+		opsz = OPSZ_DOUBLE;
+	}
+	else if (strcmp(sizename, "FPUWORD") == 0)
+	{
+		opsz = OPSZ_FPUWORD;
+	}
 	else
 	{
-		return -1;
+		opsz = -1;
+		typename = sizename;
 	};
 	
-	char *typename = strtok(NULL, " \t");
+	if (typename == NULL) typename = strtok(NULL, " \t");
+	
 	if (typename == NULL)
 	{
 		return -1;
@@ -414,7 +407,7 @@ static int parseOp(char *opspec, x86_Operand *op)
 	};
 };
 
-void x86_EmitModRM(const char *filename, int lineno, x86_Operand *opA, x86_Operand *opB)
+void x86_EmitModRM(const char *filename, int lineno, x86_Operand *opA, x86_Operand *opB, int addcount)
 {
 	Section *sect = asGetSection();
 	
@@ -469,13 +462,13 @@ void x86_EmitModRM(const char *filename, int lineno, x86_Operand *opA, x86_Opera
 						asDiag(filename, lineno, ML_WARNING, "offset truncated\n");
 					};
 					
-					ObjLE32 disp32 = OBJ_MAKE_LE32((uint32_t) opB->memref.off-4);
+					ObjLE32 disp32 = OBJ_MAKE_LE32((uint32_t) opB->memref.off-4-addcount);
 					objSectionAppend(sect, &disp32, 4);
 				}
 				else
 				{
 					objSectionReloc(sect, opB->memref.symbol,
-						REL_DWORD, REL_X86_RELATIVE, opB->memref.off-4);
+						REL_DWORD, REL_X86_RELATIVE, opB->memref.off-4-addcount);
 				};
 			}
 			else if ((opB->memref.base != 0xFF) && (opB->memref.idx == 0xFF))
@@ -559,7 +552,7 @@ void x86_EmitModRM(const char *filename, int lineno, x86_Operand *opA, x86_Opera
 						asDiag(filename, lineno, ML_WARNING, "offset truncated\n");
 					};
 					
-					ObjLE32 disp32 = OBJ_MAKE_LE32((uint32_t) opB->memref.off-4);
+					ObjLE32 disp32 = OBJ_MAKE_LE32((uint32_t) opB->memref.off);
 					objSectionAppend(sect, &disp32, 4);
 				};
 			}
@@ -612,6 +605,20 @@ void x86_Emit(const char *filename, int lineno, const char *mspec, x86_Operand *
 		};
 	};
 	
+	if (types == INSN_RM)
+	{
+		int defaultBits = x86_bits;
+		if (defaultBits == 64) defaultBits = 32;
+		
+		if ((opA->memref.opsz == 16) || (opA->memref.opsz == 32))
+		{
+			if (opA->memref.opsz != defaultBits)
+			{
+				objSectionAppend(sect, "\x66", 1);
+			};
+		};
+	};
+	
 	if ((types == INSN_RM16_I16) || (types == INSN_RM32_I32))
 	{
 		int bits;
@@ -647,10 +654,18 @@ void x86_Emit(const char *filename, int lineno, const char *mspec, x86_Operand *
 	// emit REX if necessary and if not already mandated elsewhere in the instruction
 	if (x86_bits == 64)
 	{
-		if (types == INSN_R_RM || types == INSN_XMM_RM)
+		if (types == INSN_RM)
+		{
+			if (opA->memref.opsz == 64)
+			{
+				uint8_t rex = 0x48;	// REX.W
+				objSectionAppend(sect, &rex, 1);
+			};
+		}
+		else if (types == INSN_R_RM || types == INSN_XMM_RM || types == INSN_MM_XMMRM)
 		{
 			uint8_t rex = 0x40;
-			if (opA->gpr.opsz == 64)
+			if (opA->gpr.opsz == 64 && (types != INSN_MM_XMMRM))
 			{
 				rex |= 0x08;	// REX.W
 			};
@@ -791,6 +806,7 @@ void x86_Emit(const char *filename, int lineno, const char *mspec, x86_Operand *
 	for (bytespec=strtok(buffer, " "); bytespec!=NULL; bytespec=strtok(NULL, " "))
 	{
 		uint8_t byte;
+		int addcount;
 		if ((strlen(bytespec) == 2) && (sscanf(bytespec, "%2hhX", &byte) == 1))
 		{
 			objSectionAppend(sect, &byte, 1);
@@ -805,6 +821,20 @@ void x86_Emit(const char *filename, int lineno, const char *mspec, x86_Operand *
 			else if (opA->type == OPTYPE_GPR)
 			{
 				byte += opA->gpr.num;
+			};
+			
+			objSectionAppend(sect, &byte, 1);
+		}
+		else if ((strlen(bytespec) == 4) && (sscanf(bytespec, "%2hhX+i", &byte) == 1)
+				&& (strcmp(&bytespec[2], "+i") == 0))
+		{
+			if ((types == INSN_ST) || (types == INSN_ST_ST0))
+			{
+				byte += opA->st.num & 0x7;
+			}
+			else if (types == INSN_ST0_ST)
+			{
+				byte += opB->st.num & 0x7;
 			};
 			
 			objSectionAppend(sect, &byte, 1);
@@ -968,11 +998,12 @@ void x86_Emit(const char *filename, int lineno, const char *mspec, x86_Operand *
 				};
 			};
 		}
-		else if (strcmp(bytespec, "/r") == 0)
+		else if (sscanf(bytespec, "/r.%d", &addcount) == 1)
 		{
-			x86_EmitModRM(filename, lineno, opA, opB);
+			x86_EmitModRM(filename, lineno, opA, opB, addcount);
 		}
-		else if ((strlen(bytespec) == 2) && (bytespec[0] == '/') && (bytespec[1] >= '0') && (bytespec[1] <= '7'))
+		//else if ((strlen(bytespec) == 2) && (bytespec[0] == '/') && (bytespec[1] >= '0') && (bytespec[1] <= '7'))
+		else if (sscanf(bytespec, "/%hhu.%d", &byte, &addcount) == 2)
 		{
 			x86_Operand *otherOp = opA;
 			if (opA->type == OPTYPE_IMM || opA->type == OPTYPE_OFFSET) otherOp = opB;
@@ -983,7 +1014,13 @@ void x86_Emit(const char *filename, int lineno, const char *mspec, x86_Operand *
 			fakeop.gpr.opsz = otherOp->gpr.opsz;
 			if (otherOp->type == OPTYPE_MEMREF) fakeop.gpr.opsz = otherOp->memref.opsz;
 			
-			x86_EmitModRM(filename, lineno, &fakeop, otherOp);
+			x86_EmitModRM(filename, lineno, &fakeop, otherOp, addcount);
+		}
+		else if (sscanf(bytespec, "rel.%d", &addcount) == 1)
+		{
+			x86_Operand *op = opA;
+			if (op->type != OPTYPE_OFFSET) op = opB;
+			objSectionReloc(sect, op->offset.symbol, REL_DWORD, REL_X86_RELATIVE, op->offset.addend-4-addcount);
 		}
 		else
 		{
@@ -1047,6 +1084,33 @@ static int isRM_I(x86_Operand *opA, x86_Operand *opB, int opsz)
 		return 1;
 	case OPTYPE_OFFSET:
 		return opB->offset.opsz == opsz;
+		break;
+	default:
+		return 0;
+	};
+};
+
+static int isRM64_I32(x86_Operand *opA, x86_Operand *opB)
+{
+	switch (opA->type)
+	{
+	case OPTYPE_GPR:
+	case OPTYPE_REXGPR:
+		if (opA->gpr.opsz != 64) return 0;
+		break;
+	case OPTYPE_MEMREF:
+		if (opA->memref.opsz != 64) return 0;
+		break;
+	default:
+		return 0;
+	};
+	
+	switch (opB->type)
+	{
+	case OPTYPE_IMM:
+		return 1;
+	case OPTYPE_OFFSET:
+		return opB->offset.opsz == 32;
 		break;
 	default:
 		return 0;
@@ -1141,9 +1205,44 @@ int x86_OpTypeMatch(int types, x86_Operand *opA, x86_Operand *opB)
 	case INSN_RM16_I16:
 		return isRM_I(opA, opB, 16);
 	case INSN_RM32_I32:
-		return isRM_I(opA, opB, 32);
+		return isRM_I(opA, opB, 32) || isRM64_I32(opA, opB);
 	case INSN_RM_I8:
 		return isRM_I8(opA, opB);
+	case INSN_RM8:
+		return (typeB == OPTYPE_NONE) && (typeA == OPTYPE_MEMREF) && (opA->memref.opsz == 8);
+	case INSN_RM:
+		return (typeB == OPTYPE_NONE) && (typeA == OPTYPE_MEMREF) && (opA->memref.opsz != 8);
+	case INSN_RM_FIXED:
+		return (typeB == OPTYPE_NONE) && (typeA == OPTYPE_MEMREF);
+	case INSN_IMM:
+		return (typeB == OPTYPE_NONE) && ((typeA == OPTYPE_OFFSET || typeA == OPTYPE_IMM));
+	case INSN_REL:
+		return (typeA == OPTYPE_OFFSET) && (typeB == OPTYPE_NONE);
+	case INSN_ST:
+		return (typeA == OPTYPE_ST) && (typeB == OPTYPE_NONE);
+	case INSN_ST0_ST:
+		return (typeA == OPTYPE_ST) && (typeB == OPTYPE_ST) && (opA->st.num == 0);
+	case INSN_ST_ST0:
+		return (typeA == OPTYPE_ST) && (typeB == OPTYPE_ST) && (opB->st.num == 0);
+	case INSN_RM_INT16:
+		return (typeA == OPTYPE_MEMREF) && (opA->memref.opsz == 16) && (typeB == OPTYPE_NONE);
+	case INSN_RM_INT32:
+		return (typeA == OPTYPE_MEMREF) && (opA->memref.opsz == 32) && (typeB == OPTYPE_NONE);
+	case INSN_RM_INT64:
+		return (typeA == OPTYPE_MEMREF) && (opA->memref.opsz == 64) && (typeB == OPTYPE_NONE);
+	case INSN_RM_FP32:
+		return (typeA == OPTYPE_MEMREF) && (opA->memref.opsz == OPSZ_FLOAT) && (typeB == OPTYPE_NONE);
+	case INSN_RM_FP64:
+		return (typeA == OPTYPE_MEMREF) && (opA->memref.opsz == OPSZ_DOUBLE) && (typeB == OPTYPE_NONE);
+	case INSN_RM_FP80:
+		return (typeA == OPTYPE_MEMREF) && (opA->memref.opsz == OPSZ_FPUWORD) && (typeB == OPTYPE_NONE);
+	case INSN_AX:
+		return (typeA == OPTYPE_GPR) && (opA->gpr.num == 0) && (typeB == OPTYPE_NONE);
+	case INSN_MM_XMMRM:
+		return (typeA == OPTYPE_XMM) && (opA->xmm.opsz == 64) && (
+			((typeB == OPTYPE_XMM) && (opB->xmm.opsz == 128))
+			|| ((typeB == OPTYPE_MEMREF) && (opB->memref.opsz == 128))
+			);
 	default:
 		return 0;
 	};
