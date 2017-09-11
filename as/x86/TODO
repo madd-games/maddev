@@ -6,6 +6,3 @@ x86 Assembler TODO
    the assembler to match both "addpd" and "vaddpd". This will apply to INSN_XMM_RM instructions; the assembler
    shall imply that the mandatory prefix and opcode map may be replaced by VEX and that a target for a non-destructive
    source operation is to be allowed etc.
-  
- * Addends for relocations in RIP-relative addressing, when something follows the ModR/M byte; the number of following bytes
-   should be subtracted from the addend.
