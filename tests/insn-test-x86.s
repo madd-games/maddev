@@ -233,6 +233,7 @@ cmpsb						; MODE16 MODE32 MODE64
 cmpsw						; MODE16 MODE32 MODE64
 cmpsd						; MODE16 MODE32 MODE64
 cmpsq						; MODE64
+; TODO: cmpsd
 ; TODO: cmpss
 cmpxchg BYTE PTR test, al			; MODE16 MODE32 MODE64
 cmpxchg WORD PTR test, ax			; MODE16 MODE32 MODE64
@@ -442,3 +443,51 @@ fxsave PTR [eax]				; MODE16 MODE32 MODE64
 fxtract						; MODE16 MODE32 MODE64
 fyl2x						; MODE16 MODE32 MODE64
 fyl2xp1						; MODE16 MODE32 MODE64
+haddpd xmm1, XMMWORD PTR test			; MODE32 MODE64
+haddps xmm2, XMMWORD PTR test			; MODE32 MODE64
+hlt						; MODE16 MODE32 MODE64
+hsubpd xmm3, XMMWORD PTR test			; MODE32 MODE64
+hsubps xmm4, XMMWORD PTR test			; MODE32 MODE64
+idiv BYTE PTR test				; MODE16 MODE32 MODE64
+idiv WORD PTR test				; MODE16 MODE32 MODE64
+idiv DWORD PTR test				; MODE16 MODE32 MODE64
+idiv QWORD PTR test				; MODE64
+imul BYTE PTR test				; MODE16 MODE32 MODE64
+imul WORD PTR test				; MODE16 MODE32 MODE64
+imul DWORD PTR test				; MODE16 MODE32 MODE64
+imul QWORD PTR test				; MODE64
+imul ax, WORD PTR test				; MODE16 MODE32 MODE64
+imul eax, DWORD PTR test			; MODE16 MODE32 MODE64
+imul rax, QWORD PTR test			; MODE64
+imul ax, WORD PTR test, 0x56			; MODE16 MODE32 MODE64
+imul eax, DWORD PTR test, 0x56			; MODE16 MODE32 MODE64
+imul rax, QWORD PTR test, 0x56			; MODE64
+imul ax, WORD PTR test, 0x567			; MODE16 MODE32 MODE64
+imul eax, DWORD PTR test, 0x567			; MODE16 MODE32 MODE64
+imul rax, QWORD PTR test, 0x567			; MODE64
+in al, 0x56					; MODE16 MODE32 MODE64
+in ax, 0x56					; MODE16 MODE32 MODE64
+in eax, 0x56					; MODE16 MODE32 MODE64
+in al, dx					; MODE16 MODE32 MODE64
+in ax, dx					; MODE16 MODE32 MODE64
+in eax, dx					; MODE16 MODE32 MODE64
+inc BYTE PTR test				; MODE16 MODE32 MODE64
+inc WORD PTR test				; MODE16 MODE32 MODE64
+inc DWORD PTR test				; MODE16 MODE32 MODE64
+inc QWORD PTR test				; MODE64
+inc ax						; MODE16 MODE32
+inc eax						; MODE16 MODE32
+insb						; MODE16 MODE32 MODE64
+insw						; MODE16 MODE32 MODE64
+insd						; MODE16 MODE32 MODE64
+; TODO: insertps
+int 3						; MODE16 MODE32 MODE64
+int 0x56					; MODE16 MODE32 MODE64
+int0						; MODE16 MODE32
+invd						; MODE16 MODE32 MODE64
+invplg PTR [eax]				; MODE16 MODE32 MODE64
+invpcid	eax, DWORD PTR test			; MODE16 MODE32 MODE64
+invpcid	rax, DWORD PTR test			; MODE64
+iret						; MODE16 MODE32 MODE64
+iretd						; MODE16 MODE32 MODE64
+iretq						; MODE64

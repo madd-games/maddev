@@ -1215,7 +1215,7 @@ int x86_OpTypeMatch(int types, x86_Operand *opA, x86_Operand *opB)
 	case INSN_RM_FIXED:
 		return (typeB == OPTYPE_NONE) && (typeA == OPTYPE_MEMREF);
 	case INSN_IMM:
-		return (typeB == OPTYPE_NONE) && ((typeA == OPTYPE_OFFSET || typeA == OPTYPE_IMM));
+		return (typeB == OPTYPE_NONE) && ((typeA == OPTYPE_OFFSET) || (typeA == OPTYPE_IMM));
 	case INSN_REL:
 		return (typeA == OPTYPE_OFFSET) && (typeB == OPTYPE_NONE);
 	case INSN_ST:
@@ -1237,7 +1237,25 @@ int x86_OpTypeMatch(int types, x86_Operand *opA, x86_Operand *opB)
 	case INSN_RM_FP80:
 		return (typeA == OPTYPE_MEMREF) && (opA->memref.opsz == OPSZ_FPUWORD) && (typeB == OPTYPE_NONE);
 	case INSN_AX:
-		return (typeA == OPTYPE_GPR) && (opA->gpr.num == 0) && (typeB == OPTYPE_NONE);
+		return (typeA == OPTYPE_GPR) && (opA->gpr.num == 0) && (opA->gpr.opsz == 16) && (typeB == OPTYPE_NONE);
+	case INSN_AL_I:
+		return (typeA == OPTYPE_GPR) && (opA->gpr.num == 0) && (opA->gpr.opsz == 8) && ((typeB == OPTYPE_OFFSET && (opB->offset.opsz == opA->gpr.opsz)) || (typeB == OPTYPE_IMM));
+	case INSN_AX_I:
+		return (typeA == OPTYPE_GPR) && (opA->gpr.num == 0) && (opA->gpr.opsz == 16) && ((typeB == OPTYPE_OFFSET && (opB->offset.opsz == opA->gpr.opsz)) || (typeB == OPTYPE_IMM));
+	case INSN_EAX_I:
+		return (typeA == OPTYPE_GPR) && (opA->gpr.num == 0) && (opA->gpr.opsz == 32) && ((typeB == OPTYPE_OFFSET && (opB->offset.opsz == opA->gpr.opsz)) || (typeB == OPTYPE_IMM));
+	case INSN_AX_I8:
+		return (typeA == OPTYPE_GPR) && (opA->gpr.num == 0) && (opA->gpr.opsz == 16) && ((typeB == OPTYPE_OFFSET && (opB->offset.opsz == 8)) || ((typeB == OPTYPE_IMM) && (((opB->imm.value & ~0x7FL) == 0) || ((opB->imm.value & ~0x7FL) == ~0x7FL))));
+	case INSN_EAX_I8:
+		return (typeA == OPTYPE_GPR) && (opA->gpr.num == 0) && (opA->gpr.opsz == 32) && ((typeB == OPTYPE_OFFSET && (opB->offset.opsz == 8)) || ((typeB == OPTYPE_IMM) && (((opB->imm.value & ~0x7FL) == 0) || ((opB->imm.value & ~0x7FL) == ~0x7FL))));
+	case INSN_AL_DX:
+		return (typeA == OPTYPE_GPR) && (opA->gpr.num == 0) && (opA->gpr.opsz == 8) && (typeB == OPTYPE_GPR) && (opB->gpr.num == 2) && (opB->gpr.opsz == 16);
+	case INSN_AX_DX:
+		return (typeA == OPTYPE_GPR) && (opA->gpr.num == 0) && (opA->gpr.opsz == 16) && (typeB == OPTYPE_GPR) && (opB->gpr.num == 2) && (opB->gpr.opsz == 16);
+	case INSN_EAX_DX:
+		return (typeA == OPTYPE_GPR) && (opA->gpr.num == 0) && (opA->gpr.opsz == 32) && (typeB == OPTYPE_GPR) && (opB->gpr.num == 2) && (opB->gpr.opsz == 16);
+	case INSN_INT3:
+		return (typeB == OPTYPE_NONE) && (typeA == OPTYPE_IMM) && (opA->imm.value == 3);
 	case INSN_MM_XMMRM:
 		return (typeA == OPTYPE_XMM) && (opA->xmm.opsz == 64) && (
 			((typeB == OPTYPE_XMM) && (opB->xmm.opsz == 128))
