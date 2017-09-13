@@ -195,7 +195,6 @@ enum
 	
 	/**
 	 * specific register and immediate operand of a matching size.
-	 * TODO: implement this optimisation
 	 * NOTE: INSN_EAX_I also accepts RAX, with 32-bit sign-extended immediates.
 	 */
 	INSN_AL_I,

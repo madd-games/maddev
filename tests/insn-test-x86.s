@@ -483,11 +483,11 @@ insd						; MODE16 MODE32 MODE64
 ; TODO: insertps
 int 3						; MODE16 MODE32 MODE64
 int 0x56					; MODE16 MODE32 MODE64
-int0						; MODE16 MODE32
+into						; MODE16 MODE32
 invd						; MODE16 MODE32 MODE64
 invplg PTR [eax]				; MODE16 MODE32 MODE64
 invpcid	eax, DWORD PTR test			; MODE16 MODE32 MODE64
-invpcid	rax, DWORD PTR test			; MODE64
+invpcid	rax, QWORD PTR test			; MODE64
 iret						; MODE16 MODE32 MODE64
 iretd						; MODE16 MODE32 MODE64
 iretq						; MODE64

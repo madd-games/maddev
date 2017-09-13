@@ -591,7 +591,7 @@ void x86_Emit(const char *filename, int lineno, const char *mspec, x86_Operand *
 	};
 	
 	// emit the size override prefix is necessary
-	if ((types == INSN_R16_I16) || (types == INSN_R32_I32) || (types == INSN_R8_RM8) || (types == INSN_R_RM))
+	if ((types == INSN_R16_I16) || (types == INSN_R32_I32) || (types == INSN_R8_RM8) || (types == INSN_R_RM) || (types == INSN_AX_I) || (types == INSN_EAX_I))
 	{
 		int defaultBits = x86_bits;
 		if (defaultBits == 64) defaultBits = 32;

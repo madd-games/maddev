@@ -16,6 +16,6 @@ x86_do_insn_test() {
 	do_unit_test "out/as test${bits}.s" "instruction set in ${bits}-bit mode"
 }
 
-x86_do_insn_test 16
-x86_do_insn_test 32
+#x86_do_insn_test 16
+#x86_do_insn_test 32
 x86_do_insn_test 64
