@@ -605,6 +605,17 @@ void x86_Emit(const char *filename, int lineno, const char *mspec, x86_Operand *
 		};
 	};
 	
+	if (types == INSN_REL)
+	{
+		int defaultBits = x86_bits;
+		if (defaultBits == 64) defaultBits = 32;
+		
+		if (opA->offset.opsz != defaultBits)
+		{
+			objSectionAppend(sect, "\x66", 1);
+		};
+	};
+	
 	if (types == INSN_RM)
 	{
 		int defaultBits = x86_bits;
@@ -656,10 +667,14 @@ void x86_Emit(const char *filename, int lineno, const char *mspec, x86_Operand *
 	{
 		if (types == INSN_RM)
 		{
-			if (opA->memref.opsz == 64)
+			if (opA->memref.opsz == 64 && (flags & INSN_DEF64) == 0)
 			{
 				uint8_t rex = 0x48;	// REX.W
 				objSectionAppend(sect, &rex, 1);
+			}
+			else if (opA->memref.opsz != 64 && (flags & INSN_DEF64))
+			{
+				asDiag(filename, lineno, ML_ERROR, "this instruction can only accept a QWORD PTR in 64-bit mode\n");
 			};
 		}
 		else if (types == INSN_R_RM || types == INSN_XMM_RM || types == INSN_MM_XMMRM)
@@ -1020,7 +1035,26 @@ void x86_Emit(const char *filename, int lineno, const char *mspec, x86_Operand *
 		{
 			x86_Operand *op = opA;
 			if (op->type != OPTYPE_OFFSET) op = opB;
-			objSectionReloc(sect, op->offset.symbol, REL_DWORD, REL_X86_RELATIVE, op->offset.addend-4-addcount);
+			
+			int type;
+			switch (op->offset.opsz)
+			{
+			case 8:
+				type = REL_BYTE;
+				break;
+			case 16:
+				type = REL_WORD;
+				break;
+			case 32:
+				type = REL_DWORD;
+				break;
+			case 64:
+				type = REL_QWORD;
+				break;
+			};
+			
+			objSectionReloc(sect, op->offset.symbol, type, REL_X86_RELATIVE,
+				op->offset.addend-op->offset.opsz/8-addcount);
 		}
 		else
 		{
@@ -1216,8 +1250,10 @@ int x86_OpTypeMatch(int types, x86_Operand *opA, x86_Operand *opB)
 		return (typeB == OPTYPE_NONE) && (typeA == OPTYPE_MEMREF);
 	case INSN_IMM:
 		return (typeB == OPTYPE_NONE) && ((typeA == OPTYPE_OFFSET) || (typeA == OPTYPE_IMM));
+	case INSN_REL8:
+		return (typeA == OPTYPE_OFFSET) && (opA->offset.opsz == 8) && (typeB == OPTYPE_NONE);
 	case INSN_REL:
-		return (typeA == OPTYPE_OFFSET) && (typeB == OPTYPE_NONE);
+		return (typeA == OPTYPE_OFFSET) && (opA->offset.opsz == 16 || opA->offset.opsz == 32) && (typeB == OPTYPE_NONE);
 	case INSN_ST:
 		return (typeA == OPTYPE_ST) && (typeB == OPTYPE_NONE);
 	case INSN_ST0_ST:

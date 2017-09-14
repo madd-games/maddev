@@ -280,7 +280,12 @@ enum
 	INSN_IMM,
 	
 	/**
-	 * Relative offset operand.
+	 * 8-bit relative offset.
+	 */
+	INSN_REL8,
+	
+	/**
+	 * Relative offset operand; 16- or 32-bit.
 	 */
 	INSN_REL,
 	
