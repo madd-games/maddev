@@ -115,6 +115,19 @@ static int parseOp(char *opspec, x86_Operand *op)
 		};
 	};
 
+	for (regnum=0; sregList[regnum].name!=NULL; regnum++)
+	{
+		SregSpec *spec = &sregList[regnum];
+		if (strcmp(spec->name, opspec) == 0)
+		{
+			op->sreg.type = OPTYPE_SREG;
+			op->sreg.num = spec->num;
+			op->sreg.opsz = 16;		// unconditionally
+			op->sreg.prefix = spec->prefix;
+			return 0;
+		};
+	};
+	
 	if (x86_bits == 64)
 	{
 		for (regnum=0; regnum<16; regnum++)
@@ -203,6 +216,49 @@ static int parseOp(char *opspec, x86_Operand *op)
 			
 			op->st.type = OPTYPE_ST;
 			op->st.num = mmno;
+			
+			return 0;
+		};
+	};
+	
+	// CR
+	if (sscanf(opspec, "cr%hhu%n", &mmno, &count) >= 1)
+	{
+		if (count == strlen(opspec))
+		{
+			if (mmno >= 16) return -1;
+			if (mmno >= 8 && x86_bits != 64) return -1;
+			
+			op->cr.type = OPTYPE_CR;
+			op->cr.num = mmno;
+			
+			return 0;
+		};
+	};
+	
+	// DR
+	if (sscanf(opspec, "dr%hhu%n", &mmno, &count) >= 1)
+	{
+		if (count == strlen(opspec))
+		{
+			if (mmno >= 8) return -1;
+			
+			op->dr.type = OPTYPE_DR;
+			op->dr.num = mmno;
+			
+			return 0;
+		};
+	};
+	
+	// DB - alias for DR registers
+	if (sscanf(opspec, "db%hhu%n", &mmno, &count) >= 1)
+	{
+		if (count == strlen(opspec))
+		{
+			if (mmno >= 8) return -1;
+			
+			op->dr.type = OPTYPE_DR;
+			op->dr.num = mmno;
 			
 			return 0;
 		};
@@ -297,15 +353,50 @@ static int parseOp(char *opspec, x86_Operand *op)
 	else if (strcmp(typename, "PTR") == 0)
 	{
 		char *rest = strtok(NULL, "");
-		char *bracketBit = strchr(rest, '[');
-		if (bracketBit != NULL) *bracketBit++ = 0;
 
 		memset(op, 0, sizeof(x86_Operand));
 		op->memref.type = OPTYPE_MEMREF;
 		op->memref.base = 0xFF;			// no base register
 		op->memref.idx = 0xFF;			// no index register
 		op->memref.opsz = opsz;
+		op->memref.segment = 0;
+
+		char *colonPos = strchr(rest, ':');
+		if (colonPos != NULL)
+		{
+			*colonPos = 0;
+			char *segname = rest;
+			rest = colonPos+1;
+			
+			int i;
+			for (i=0; sregList[i].name!=NULL; i++)
+			{
+				if (strcmp(segname, sregList[i].name) == 0)
+				{
+					op->memref.segment = sregList[i].prefix;
+					break;
+				};
+			};
+			
+			char *endptr;
+			unsigned long int segment = strtoul(segname, &endptr, 0);
+			if (*endptr != 0)
+			{
+				return -1;
+			};
+			
+			if ((segment & ~0xFFFF) != 0)
+			{
+				return -1;
+			};
+			
+			op->memref.type = OPTYPE_MEMREF_ABSEG;
+			op->memref.segment = (uint16_t) segment;
+		};
 		
+		char *bracketBit = strchr(rest, '[');
+		if (bracketBit != NULL) *bracketBit++ = 0;
+
 		char *plusPos = strchr(rest, '+');
 		if (plusPos != NULL)
 		{
@@ -399,6 +490,11 @@ static int parseOp(char *opspec, x86_Operand *op)
 			};
 		};
 		
+		if (op->type == OPTYPE_MEMREF_ABSEG)
+		{
+			if (op->memref.scale != 0 || op->memref.base != 0xFF) return -1;
+		};
+		
 		return 0;
 	}
 	else
@@ -411,8 +507,8 @@ void x86_EmitModRM(const char *filename, int lineno, x86_Operand *opA, x86_Opera
 {
 	Section *sect = asGetSection();
 	
-	if (((opA->type == OPTYPE_GPR) || (opA->type == OPTYPE_REXGPR) || (opA->type == OPTYPE_XMM)) &&
-		((opB->type == OPTYPE_GPR) || (opB->type == OPTYPE_REXGPR) || (opB->type == OPTYPE_XMM)))
+	if (((opA->type == OPTYPE_GPR) || (opA->type == OPTYPE_REXGPR) || (opA->type == OPTYPE_XMM) || (opA->type == OPTYPE_SREG) || (opA->type == OPTYPE_CR) || (opA->type == OPTYPE_DR)) &&
+		((opB->type == OPTYPE_GPR) || (opB->type == OPTYPE_REXGPR) || (opB->type == OPTYPE_XMM) || (opB->type == OPTYPE_SREG) || (opB->type == OPTYPE_CR) || (opB->type == OPTYPE_DR)))
 	{
 		uint8_t modrm = 0xC0 | ((opA->gpr.num & 0x7) << 3) | (opB->gpr.num & 0x7);
 		objSectionAppend(sect, &modrm, 1);
@@ -588,10 +684,83 @@ void x86_Emit(const char *filename, int lineno, const char *mspec, x86_Operand *
 		opA = opB;
 		opB = temp;
 		types = INSN_R8_RM8;
+	}
+	else if (types == INSN_RM16_SREG)
+	{
+		x86_Operand *temp = opA;
+		opA = opB;
+		opB = temp;
+		types = INSN_SREG_RM16;
+	}
+	else if (types == INSN_RM64_SREG)
+	{
+		x86_Operand *temp = opA;
+		opA = opB;
+		opB = temp;
+		types = INSN_SREG_RM64;
+	}
+	else if (types == INSN_OFFSET_AL)
+	{
+		x86_Operand *temp = opA;
+		opA = opB;
+		opB = temp;
+		types = INSN_AL_OFFSET;
+	}
+	else if (types == INSN_OFFSET_A)
+	{
+		x86_Operand *temp = opA;
+		opA = opB;
+		opB = temp;
+		types = INSN_A_OFFSET;
+	}
+	else if (types == INSN_R_CR)
+	{
+		x86_Operand *temp = opA;
+		opA = opB;
+		opB = temp;
+		types = INSN_CR_R;
+	}
+	else if (types == INSN_R_DR)
+	{
+		x86_Operand *temp = opA;
+		opA = opB;
+		opB = temp;
+		types = INSN_DR_R;
+	};
+
+
+	// mandatory prefix (if any) must come before REX and 66 etc
+	if (memcmp(mspec, "66 ", 3) == 0)
+	{
+		objSectionAppend(sect, "\x66", 1);
+		mspec += 3;
+	}
+	else if (memcmp(mspec, "F3 ", 3) == 0)
+	{
+		objSectionAppend(sect, "\xF3", 1);
+		mspec += 3;
+	}
+	else if (memcmp(mspec, "F2 ", 3) == 0)
+	{
+		objSectionAppend(sect, "\xF2", 1);
+		mspec += 3;
+	};
+
+	// segment override if necessary
+	x86_Operand *refOp = NULL;
+	if (opA->type == OPTYPE_MEMREF) refOp = opA;
+	if (opB->type == OPTYPE_MEMREF) refOp = opB;
+	if (refOp != NULL)
+	{
+		if (refOp->memref.segment != 0)
+		{
+			uint8_t ovr = (uint8_t) refOp->memref.segment;
+			objSectionAppend(sect, &ovr, 1);
+		};
 	};
 	
 	// emit the size override prefix is necessary
-	if ((types == INSN_R16_I16) || (types == INSN_R32_I32) || (types == INSN_R8_RM8) || (types == INSN_R_RM) || (types == INSN_AX_I) || (types == INSN_EAX_I))
+	if ((types == INSN_R16_I16) || (types == INSN_R32_I32) || (types == INSN_R8_RM8) || (types == INSN_R_RM) || (types == INSN_AX_I) || (types == INSN_EAX_I) || (types == INSN_A_OFFSET))
 	{
 		int defaultBits = x86_bits;
 		if (defaultBits == 64) defaultBits = 32;
@@ -644,28 +813,11 @@ void x86_Emit(const char *filename, int lineno, const char *mspec, x86_Operand *
 			objSectionAppend(sect, "\x66", 1);
 		};
 	};
-	
-	// mandatory prefix (if any) must come before REX
-	if (memcmp(mspec, "66 ", 3) == 0)
-	{
-		objSectionAppend(sect, "\x66", 1);
-		mspec += 3;
-	}
-	else if (memcmp(mspec, "F3 ", 3) == 0)
-	{
-		objSectionAppend(sect, "\xF3", 1);
-		mspec += 3;
-	}
-	else if (memcmp(mspec, "F2 ", 3) == 0)
-	{
-		objSectionAppend(sect, "\xF2", 1);
-		mspec += 3;
-	};
 
 	// emit REX if necessary and if not already mandated elsewhere in the instruction
 	if (x86_bits == 64)
 	{
-		if (types == INSN_RM)
+		if (types == INSN_RM || types == INSN_RM32_I32)
 		{
 			if (opA->memref.opsz == 64 && (flags & INSN_DEF64) == 0)
 			{
@@ -677,7 +829,22 @@ void x86_Emit(const char *filename, int lineno, const char *mspec, x86_Operand *
 				asDiag(filename, lineno, ML_ERROR, "this instruction can only accept a QWORD PTR in 64-bit mode\n");
 			};
 		}
-		else if (types == INSN_R_RM || types == INSN_XMM_RM || types == INSN_MM_XMMRM)
+		else if (types == INSN_CR_R)
+		{
+			uint8_t rex = 0x40;
+			
+			if (opA->cr.num & 0x8) rex |= 0x4;
+			if (opB->gpr.num & 0x8) rex |= 0x1;
+			if (rex != 0x40) objSectionAppend(sect, &rex, 1);
+		}
+		else if (types == INSN_DR_R)
+		{
+			uint8_t rex = 0x40;
+			
+			if (opB->gpr.num & 0x8) rex |= 0x1;
+			if (rex != 0x40) objSectionAppend(sect, &rex, 1);
+		}
+		else if (types == INSN_R_RM || types == INSN_XMM_RM || types == INSN_MM_XMMRM || types == INSN_R_CR)
 		{
 			uint8_t rex = 0x40;
 			if (opA->gpr.opsz == 64 && (types != INSN_MM_XMMRM))
@@ -715,6 +882,10 @@ void x86_Emit(const char *filename, int lineno, const char *mspec, x86_Operand *
 			{
 				objSectionAppend(sect, &rex, 1);
 			};
+		}
+		else if (types == INSN_A_OFFSET && opB->memref.opsz == 64)
+		{
+			objSectionAppend(sect, "\x48", 1);
 		}
 		else if (strstr(mspec, "REX") == NULL)
 		{
@@ -1017,7 +1188,6 @@ void x86_Emit(const char *filename, int lineno, const char *mspec, x86_Operand *
 		{
 			x86_EmitModRM(filename, lineno, opA, opB, addcount);
 		}
-		//else if ((strlen(bytespec) == 2) && (bytespec[0] == '/') && (bytespec[1] >= '0') && (bytespec[1] <= '7'))
 		else if (sscanf(bytespec, "/%hhu.%d", &byte, &addcount) == 2)
 		{
 			x86_Operand *otherOp = opA;
@@ -1055,6 +1225,82 @@ void x86_Emit(const char *filename, int lineno, const char *mspec, x86_Operand *
 			
 			objSectionReloc(sect, op->offset.symbol, type, REL_X86_RELATIVE,
 				op->offset.addend-op->offset.opsz/8-addcount);
+		}
+		else if (strcmp(bytespec, "moffs") == 0)
+		{
+			// emit a 64-bit address in 64-bit mode
+			if (x86_bits == 64)
+			{
+				if (opB->memref.symbol != NULL)
+				{
+					objSectionReloc(sect, opB->memref.symbol, REL_QWORD, REL_X86_ABSOLUTE,
+							opB->memref.off);
+				}
+				else
+				{
+					uint64_t value = opB->memref.off;
+					uint8_t bytes[8];
+					bytes[0] = (uint8_t) (value & 0xFF);
+					bytes[1] = (uint8_t) (value >> 8);
+					bytes[2] = (uint8_t) (value >> 16);
+					bytes[3] = (uint8_t) (value >> 24);
+					bytes[4] = (uint8_t) (value >> 32);
+					bytes[5] = (uint8_t) (value >> 40);
+					bytes[6] = (uint8_t) (value >> 48);
+					bytes[7] = (uint8_t) (value >> 56);
+					objSectionAppend(sect, bytes, 8);
+				};
+			}
+			else
+			{
+				// in every other case, write the offset and segment
+				int type, bytecount;
+				switch (x86_bits)
+				{
+				case 16:
+					type = REL_WORD;
+					bytecount = 2;
+					break;
+				case 32:
+				case 64:
+					type = REL_DWORD;
+					bytecount = 4;
+					break;
+				};
+				
+				if (opB->memref.symbol != NULL)
+				{
+					objSectionReloc(sect, opB->memref.symbol, type, REL_X86_ABSOLUTE,
+							opB->memref.off);
+				}
+				else
+				{
+					uint64_t value = opB->memref.off;
+					uint8_t bytes[4];
+					memset(bytes, 0, 4);
+					bytes[0] = (uint8_t) (value & 0xFF);
+					bytes[1] = (uint8_t) (value >> 8);
+					bytes[2] = (uint8_t) (value >> 16);
+					bytes[3] = (uint8_t) (value >> 24);
+					
+					if (bytecount == 2)
+					{
+						if ((value & ~0xFFFF) != 0)
+						{
+							asDiag(filename, lineno, ML_ERROR, "offset does not fit in 16 bits");
+							return;
+						};
+					};
+					
+					objSectionAppend(sect, bytes, bytecount);
+				};
+				
+				// and the segment
+				uint8_t bytes[2];
+				bytes[0] = (uint8_t) (opB->memref.segment);
+				bytes[1] = (uint8_t) (opB->memref.segment >> 8);
+				objSectionAppend(sect, bytes, 2);
+			};
 		}
 		else
 		{
@@ -1297,6 +1543,45 @@ int x86_OpTypeMatch(int types, x86_Operand *opA, x86_Operand *opB)
 			((typeB == OPTYPE_XMM) && (opB->xmm.opsz == 128))
 			|| ((typeB == OPTYPE_MEMREF) && (opB->memref.opsz == 128))
 			);
+	case INSN_MM_RM:
+		return (typeA == OPTYPE_XMM) && (opA->xmm.opsz == 64) && (
+			((typeB == OPTYPE_XMM) && (opB->xmm.opsz == 64))
+			|| ((typeB == OPTYPE_MEMREF) && (opB->memref.opsz == 64))
+			);
+	case INSN_RM16_SREG:
+		return (((typeA == OPTYPE_MEMREF) && (opA->memref.opsz == 16)) || ((typeA == OPTYPE_GPR || typeA == OPTYPE_REXGPR) && (opA->gpr.opsz == 16))) && (typeB == OPTYPE_SREG);
+	case INSN_RM64_SREG:
+		return (((typeA == OPTYPE_MEMREF) && (opA->memref.opsz == 64)) || ((typeA == OPTYPE_GPR || typeA == OPTYPE_REXGPR) && (opA->gpr.opsz == 64))) && (typeB == OPTYPE_SREG);
+	case INSN_SREG_RM16:
+		return (((typeB == OPTYPE_MEMREF) && (opB->memref.opsz == 16)) || ((typeB == OPTYPE_GPR || typeB == OPTYPE_REXGPR) && (opB->gpr.opsz == 16))) && (typeA == OPTYPE_SREG);
+	case INSN_SREG_RM64:
+		return (((typeB == OPTYPE_MEMREF) && (opB->memref.opsz == 64)) || ((typeB == OPTYPE_GPR || typeB == OPTYPE_REXGPR) && (opB->gpr.opsz == 64))) && (typeA == OPTYPE_SREG);
+	case INSN_AL_OFFSET:
+		return (typeA == OPTYPE_GPR) && (opA->gpr.num == 0) && (opA->gpr.opsz == 8)
+			&& ((typeB == OPTYPE_MEMREF && x86_bits == 64) || (typeB == OPTYPE_MEMREF_ABSEG && x86_bits != 64))
+			&& (opB->memref.opsz == 8) && (opB->memref.base == 0xFF) && (opB->memref.scale == 0);
+	case INSN_A_OFFSET:
+		return (typeA == OPTYPE_GPR || typeA == OPTYPE_REXGPR) && (opA->gpr.num == 0) && (opA->gpr.opsz != 8)
+			&& ((typeB == OPTYPE_MEMREF && x86_bits == 64) || (typeB == OPTYPE_MEMREF_ABSEG && x86_bits != 64))
+			&& (opB->memref.opsz != 8) && (opB->memref.base == 0xFF) && (opB->memref.scale == 0)
+			&& (opB->memref.opsz == opA->gpr.opsz);
+	case INSN_OFFSET_AL:
+		return (typeB == OPTYPE_GPR) && (opB->gpr.num == 0) && (opB->gpr.opsz == 8)
+			&& ((typeA == OPTYPE_MEMREF && x86_bits == 64) || (typeA == OPTYPE_MEMREF_ABSEG && x86_bits != 64))
+			&& (opA->memref.opsz == 8) && (opA->memref.base == 0xFF) && (opA->memref.scale == 0);
+	case INSN_OFFSET_A:
+		return (typeB == OPTYPE_GPR || typeB == OPTYPE_REXGPR) && (opB->gpr.num == 0) && (opB->gpr.opsz != 8)
+			&& ((typeA == OPTYPE_MEMREF && x86_bits == 64) || (typeA == OPTYPE_MEMREF_ABSEG && x86_bits != 64))
+			&& (opA->memref.opsz != 8) && (opA->memref.base == 0xFF) && (opA->memref.scale == 0)
+			&& (opA->memref.opsz == opB->gpr.opsz);
+	case INSN_R_CR:
+		return (typeA == OPTYPE_GPR || typeA == OPTYPE_REXGPR) && (typeB == OPTYPE_CR);
+	case INSN_CR_R:
+		return (typeA == OPTYPE_CR) && (typeB == OPTYPE_GPR || typeB == OPTYPE_REXGPR);
+	case INSN_R_DR:
+		return (typeA == OPTYPE_GPR || typeA == OPTYPE_REXGPR) && (typeB == OPTYPE_DR);
+	case INSN_DR_R:
+		return (typeA == OPTYPE_DR) && (typeB == OPTYPE_GPR || typeB == OPTYPE_REXGPR);
 	default:
 		return 0;
 	};
@@ -1381,12 +1666,12 @@ void FamilyAssemble(const char *filename, int lineno, char *line)
 		return;
 	};
 
-	// if a REXGPR is used, try to convert the other to REXGPR
-	if (opA.type == OPTYPE_REXGPR)
+	// if a REXGPR or CR is used, try to convert the other to REXGPR
+	if (opA.type == OPTYPE_REXGPR || opA.type == OPTYPE_CR)
 	{
 		tryRexConvert(&opB);
 	}
-	else if (opB.type == OPTYPE_REXGPR)
+	else if (opB.type == OPTYPE_REXGPR || opB.type == OPTYPE_CR)
 	{
 		tryRexConvert(&opA);
 	};

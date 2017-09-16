@@ -57,7 +57,11 @@ enum
 	OPTYPE_IMM,
 	OPTYPE_OFFSET,
 	OPTYPE_MEMREF,
+	OPTYPE_MEMREF_ABSEG,		// memory reference with absolute segment
 	OPTYPE_ST,
+	OPTYPE_SREG,
+	OPTYPE_CR,
+	OPTYPE_DR,
 };
 
 #define OPSZ_FLOAT			0xF0
@@ -65,7 +69,7 @@ enum
 #define	OPSZ_FPUWORD			0xF2
 
 /**
- * NOTE: gpr, rexgpr and xmm must have the same format to help with ModR/M bytes.
+ * NOTE: gpr, rexgpr, xmm, sreg and cr must have the same format to help with ModR/M bytes.
  */
 typedef union
 {
@@ -94,6 +98,26 @@ typedef union
 	
 	struct
 	{
+		int type;		// OPTYPE_SREG
+		uint8_t num;		// register number
+		uint8_t opsz;		// always 16, so that the ModRM emitter can be more general
+		uint8_t prefix;		// segment override prefix
+	} sreg;
+
+	struct
+	{
+		int type;		// OPTYPE_CR
+		uint8_t num;		// register number
+	} cr;
+
+	struct
+	{
+		int type;		// OPTYPE_DR
+		uint8_t num;		// register number
+	} dr;
+
+	struct
+	{
 		int type;		// OPTYPE_IMM
 		long int value;
 	} imm;
@@ -108,13 +132,20 @@ typedef union
 	
 	struct
 	{
-		int type;		// OPTYPE_OFFSET
+		int type;		// OPTYPE_MEMREF or OPTYPE_MEMREF_ABSEG
 		int opsz;		// operand size in bits (8, 16, 32 or 64)
 		char *symbol;		// symbol (if any) or NULL
 		int64_t off;		// value to add to symbol
 		int scale;		// scale power (0 = 1, 1 = 2, 2 = 4, 3 = 8)
 		uint8_t idx;		// index register number
 		uint8_t base;		// base register number (0x10 = RIP, 0xFF = no base)
+		
+		/**
+		 * This field has a different meaning depending on 'type':
+		 * OPTYPE_MEMREF - 8-bit segment override prefix to use, or 0 if no segment override needed.
+		 * OPTYPE_MEMREF_ABSEG - the absolute segment
+		 */
+		uint16_t segment;
 	} memref;
 	
 	struct
@@ -270,9 +301,14 @@ enum
 	INSN_RM_FIXED,
 	
 	/**
-	 * Memory reference + XMM/rm ???
+	 * MMX + XMM/rm
 	 */
 	INSN_MM_XMMRM,
+	
+	/**
+	 * MMX + MMX
+	 */
+	INSN_MM_RM,
 	
 	/**
 	 * Single immediate operand of any size.
@@ -325,6 +361,36 @@ enum
 	 * Weird thingy for int instruction
 	 */
 	INSN_INT3,
+	
+	/**
+	 * r/m and segment registers
+	 */
+	INSN_RM16_SREG,
+	INSN_RM64_SREG,
+	INSN_SREG_RM16,
+	INSN_SREG_RM64,
+	
+	/**
+	 * "A" register + memory references in the form of immediate addresses; 64-bit address,
+	 * or a segment:offset pair (with size depending on mode).
+	 * AL indicates 8-bit data; for just "A", it is implicit based on "66" and "REX".
+	 */
+	INSN_AL_OFFSET,
+	INSN_A_OFFSET,
+	INSN_OFFSET_AL,
+	INSN_OFFSET_A,
+	
+	/**
+	 * Normal registers and control registers.
+	 */
+	INSN_R_CR,
+	INSN_CR_R,
+	
+	/**
+	 * Normal registers and debug registers.
+	 */
+	INSN_R_DR,
+	INSN_DR_R,
 };
 
 /**
@@ -369,9 +435,19 @@ typedef struct
 	const char *name64;
 } RegSpec;
 
+/**
+ * Segment register specification.
+ */
+typedef struct
+{
+	const char *name;			/* name of the register (NULL = list terminator) */
+	uint8_t num;				/* register number, for "sreg" fields */
+	uint8_t prefix;				/* segment override prefix for this segment */
+} SregSpec;
+
 extern RegSpec gprList[8];
 extern RegSpec rexgprList[16];
-
+extern SregSpec sregList[];
 extern InsnSpec insnList[];
 
 /**

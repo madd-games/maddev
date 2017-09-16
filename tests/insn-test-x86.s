@@ -550,17 +550,13 @@ lss rax, QWORD PTR test				; MODE64
 lgs ax, WORD PTR test				; MODE16 MODE32 MODE64
 lgs eax, DWORD PTR test				; MODE16 MODE32 MODE64
 lgs rax, QWORD PTR test				; MODE64
-les ax, WORD PTR test				; MODE16 MODE32 MODE64
-les eax, DWORD PTR test				; MODE16 MODE32 MODE64
-les rax, QWORD PTR test				; MODE64
+lea ax, WORD PTR test				; MODE16 MODE32 MODE64
+lea eax, DWORD PTR test				; MODE16 MODE32 MODE64
+lea rax, QWORD PTR test				; MODE64
 leave						; MODE16 MODE32 MODE64
 lldt WORD PTR test				; MODE16 MODE32 MODE64
 lmsw WORD PTR test				; MODE16 MODE32 MODE64
 lock						; MODE16 MODE32 MODE64
-lods BYTE PTR test				; MODE16 MODE32 MODE64
-lods WORD PTR test				; MODE16 MODE32 MODE64
-lods DWORD PTR test				; MODE16 MODE32 MODE64
-lods QWORD PTR test				; MODE64
 lodsb						; MODE16 MODE32 MODE64
 lodsw						; MODE16 MODE32 MODE64
 lodsd						; MODE16 MODE32 MODE64
@@ -570,8 +566,46 @@ loope BYTE OFFSET test				; MODE16 MODE32 MODE64
 loopne BYTE OFFSET test				; MODE16 MODE32 MODE64
 lsl ax, WORD PTR test				; MODE16 MODE32 MODE64
 lsl eax, DWORD PTR test				; MODE16 MODE32 MODE64
-lsl rax, DWORD PTR test				; MODE64
+lsl rax, QWORD PTR test				; MODE64
 ltr WORD PTR test				; MODE16 MODE32 MODE64
-lzcnt ax, WORD PTR test				; MODE16 MODE32 MODE64
-lzcnt eax, DWORD PTR test			; MODE16 MODE32 MODE64
-lzcnt rax, QWORD PTR test			; MODE64
+lzcnt bx, WORD PTR test				; MODE16 MODE32 MODE64
+lzcnt ebx, DWORD PTR test			; MODE16 MODE32 MODE64
+lzcnt rbx, QWORD PTR test			; MODE64
+maskmovdqu xmm3, xmm2				; MODE16 MODE32 MODE64
+maskmovq mm1, mm5				; MODE16 MODE32 MODE64
+maxpd xmm4, XMMWORD PTR test			; MODE16 MODE32 MODE64
+maxps xmm4, XMMWORD PTR test			; MODE16 MODE32 MODE64
+maxsd xmm4, XMMWORD PTR test			; MODE16 MODE32 MODE64
+maxss xmm4, XMMWORD PTR test			; MODE16 MODE32 MODE64
+minpd xmm4, XMMWORD PTR test			; MODE16 MODE32 MODE64
+minps xmm4, XMMWORD PTR test			; MODE16 MODE32 MODE64
+minsd xmm4, XMMWORD PTR test			; MODE16 MODE32 MODE64
+minss xmm4, XMMWORD PTR test			; MODE16 MODE32 MODE64
+monitor						; MODE16 MODE32 MODE64
+mov al, BYTE PTR test				; MODE16 MODE32 MODE64
+mov ax, WORD PTR test				; MODE16 MODE32 MODE64
+mov eax, DWORD PTR test				; MODE16 MODE32 MODE64
+mov rax, QWORD PTR test				; MODE64
+mov BYTE PTR test, al				; MODE16 MODE32 MODE64
+mov WORD PTR test, ax				; MODE16 MODE32 MODE64
+mov DWORD PTR test, eax				; MODE16 MODE32 MODE64
+mov QWORD PTR test, rax				; MODE64
+mov WORD PTR test, cs				; MODE16 MODE32 MODE64
+mov WORD PTR test, ds				; MODE16 MODE32 MODE64
+mov WORD PTR test, es				; MODE16 MODE32 MODE64
+mov WORD PTR test, fs				; MODE16 MODE32 MODE64
+mov WORD PTR test, gs				; MODE16 MODE32 MODE64
+mov WORD PTR test, ss				; MODE16 MODE32 MODE64
+mov QWORD PTR test, ss				; MODE64
+mov ss, ax					; MODE16 MODE32 MODE64
+mov ss, rax					; MODE64
+mov BYTE PTR test, 0x56				; MODE16 MODE32 MODE64
+mov WORD PTR test, 0x567			; MODE16 MODE32 MODE64
+mov DWORD PTR test, 0x456			; MODE16 MODE32 MODE64
+mov QWORD PTR test, 0x453			; MODE64
+mov cr0, ax					; MODE16 MODE32 MODE64
+mov ax, cr0					; MODE16 MODE32 MODE64
+mov dr0, ax					; MODE16 MODE32 MODE64
+mov ax, dr0					; MODE16 MODE32 MODE64
+mov db0, ax					; MODE16 MODE32 MODE64
+mov ax, db0					; MODE16 MODE32 MODE64

@@ -68,6 +68,21 @@ RegSpec rexgprList[16] = {
 };
 
 /**
+ * Segment registers.
+ */
+SregSpec sregList[] = {
+	{"es",	0,	0x26},
+	{"cs",	1,	0x2E},
+	{"ss",	2,	0x36},
+	{"ds",	3,	0x3E},
+	{"fs",	4,	0x64},
+	{"gs",	5,	0x65},
+	
+	// LIST TERMINATOR
+	{NULL}
+};
+
+/**
  * List of instructions. See comment in x86/asfamily.h for explanation of format.
  */
 InsnSpec insnList[] = {
@@ -555,30 +570,56 @@ InsnSpec insnList[] = {
 	{"lea",			INSN_R_RM,		"8D /r.0",				INSN_ALL_MODES},
 	{"leave",		INSN_NONE,		"C9",					INSN_ALL_MODES},
 	{"lfence",		INSN_NONE,		"0F AE E8",				INSN_ALL_MODES},
-	{"lldt",		INSN_RM,		"0F 00 /2.0",				INSN_ALL_MODES},
-	{"lmsw",		INSN_RM,		"0F 01 /6.0",				INSN_ALL_MODES},
+	{"lgdt",		INSN_RM_FIXED,		"0F 01 /2.0",				INSN_ALL_MODES},
+	{"lidt",		INSN_RM_FIXED,		"0F 01 /3.0",				INSN_ALL_MODES},
+	{"lldt",		INSN_RM_FIXED,		"0F 00 /2.0",				INSN_ALL_MODES},
+	{"lmsw",		INSN_RM_FIXED,		"0F 01 /6.0",				INSN_ALL_MODES},
 	{"lock",		INSN_NONE,		"F0",					INSN_ALL_MODES},
-	{"lods",		INSN_RM80,		"AC",					INSN_ALL_MODES},
-	{"lods",		INSN_RM,		"AD",					INSN_ALL_MODES},
 	{"lodsb",		INSN_NONE,		"AC",					INSN_ALL_MODES},
 	{"lodsw",		INSN_NONE,		"AD",					INSN_ALL_MODES},
 	{"lodsd",		INSN_NONE,		"AD",					INSN_ALL_MODES},
-	{"lodsq",		INSN_NONE,		"48 AD",				INSN_ALL_MODES},
-	{"loop",		INSN_REL8,		"E2 cb",				INSN_ALL_MODES},
-	{"loope",		INSN_REL8,		"E1 cb",				INSN_ALL_MODES},
-	{"loopne",		INSN_REL8,		"E0 cb",				INSN_ALL_MODES},
+	{"lodsq",		INSN_NONE,		"48 AD",				INSN_64},
+	{"loop",		INSN_REL8,		"E2 rel.0",				INSN_ALL_MODES},
+	{"loope",		INSN_REL8,		"E1 rel.0",				INSN_ALL_MODES},
+	{"loopne",		INSN_REL8,		"E0 rel.0",				INSN_ALL_MODES},
 	{"lsl",			INSN_R_RM,		"0F 03 /r.0",				INSN_ALL_MODES},
-	{"ltr",			INSN_RM,		"0F 00 /3.0",				INSN_ALL_MODES},
-	// TODO: lzcnt = alias for "rep bsr"
+	{"ltr",			INSN_RM_FIXED,		"0F 00 /3.0",				INSN_ALL_MODES},
+	{"lzcnt",		INSN_R_RM,		"F3 0F BD /r.0",			INSN_ALL_MODES},
+	{"*maskmovdqu",		INSN_XMM_RM,		"66 0F F7 /r.0",			INSN_ALL_MODES},
+	{"maskmovq",		INSN_MM_RM,		"0F F7 /r.0",				INSN_ALL_MODES},
+	{"*maxpd",		INSN_XMM_RM,		"66 0F 5F /r.0",			INSN_ALL_MODES},
+	{"*maxps",		INSN_XMM_RM,		"0F 5F /r.0",				INSN_ALL_MODES},
+	{"*maxsd",		INSN_XMM_RM,		"F2 0F 5F /r.0",			INSN_ALL_MODES},
+	{"*maxss",		INSN_XMM_RM,		"F3 0F 5F /r.0",			INSN_ALL_MODES},
+	{"*minpd",		INSN_XMM_RM,		"66 0F 5D /r.0",			INSN_ALL_MODES},
+	{"*minps",		INSN_XMM_RM,		"0F 5D /r.0",				INSN_ALL_MODES},
+	{"*minsd",		INSN_XMM_RM,		"F2 0F 5D /r.0",			INSN_ALL_MODES},
+	{"*minss",		INSN_XMM_RM,		"F3 0F 5D /r.0",			INSN_ALL_MODES},
+	{"monitor",		INSN_NONE,		"0F 01 C8",				INSN_ALL_MODES},
+	{"mov",			INSN_AL_OFFSET,		"A0 moffs",				INSN_ALL_MODES},
+	{"mov",			INSN_A_OFFSET,		"A1 moffs",				INSN_ALL_MODES},
+	{"mov",			INSN_OFFSET_AL,		"A2 moffs",				INSN_ALL_MODES},
+	{"mov",			INSN_OFFSET_A,		"A3 moffs",				INSN_ALL_MODES},
+	{"mov",			INSN_R8_RM8,		"8A /r.0",				INSN_ALL_MODES},
+	{"mov",			INSN_R_RM,		"8B /r.0",				INSN_ALL_MODES},
+	{"mov",			INSN_RM8_R8,		"88 /r.0",				INSN_ALL_MODES},
+	{"mov",			INSN_RM_R,		"89 /r.0",				INSN_ALL_MODES},
+	{"mov",			INSN_RM16_SREG,		"8C /r.0",				INSN_ALL_MODES},
+	{"mov",			INSN_RM64_SREG,		"48 8C /r.0",				INSN_64},
+	{"mov",			INSN_SREG_RM16,		"8E /r.0",				INSN_ALL_MODES},
+	{"mov",			INSN_SREG_RM64,		"48 8E /r.0",				INSN_64},
 	{"mov",			INSN_R8_I8,		"B0+r ib",				INSN_ALL_MODES},
 	{"mov",			INSN_R16_I16,		"B8+r iw",				INSN_ALL_MODES},
 	{"mov",			INSN_R64_I64,		"B8+r iq",				INSN_ALL_MODES},
 	{"movabs",		INSN_R64_I64,		"B8+r iq",				INSN_ALL_MODES},
 	{"mov",			INSN_R32_I32,		"B8+r id",				INSN_ALL_MODES},
-	{"mov",			INSN_R8_RM8,		"8A /r.0",				INSN_ALL_MODES},
-	{"mov",			INSN_R_RM,		"8B /r.0",				INSN_ALL_MODES},
-	{"mov",			INSN_RM8_R8,		"88 /r.0",				INSN_ALL_MODES},
-	{"mov",			INSN_RM_R,		"89 /r.0",				INSN_ALL_MODES},
+	{"mov",			INSN_RM8_I8,		"C6 /0.1 ib",				INSN_ALL_MODES},
+	{"mov",			INSN_RM16_I16,		"C7 /0.2 iw",				INSN_ALL_MODES},
+	{"mov",			INSN_RM32_I32,		"C7 /0.4 id",				INSN_ALL_MODES},
+	{"mov",			INSN_R_CR,		"0F 20 /r.0",				INSN_ALL_MODES},
+	{"mov",			INSN_CR_R,		"0F 22 /r.0",				INSN_ALL_MODES},
+	{"mov",			INSN_R_DR,		"0F 21 /r.0",				INSN_ALL_MODES},
+	{"mov",			INSN_DR_R,		"0F 23 /r.0",				INSN_ALL_MODES},
 	{"pop",			INSN_R,			"58+r",					INSN_ALL_MODES | INSN_DEF64},
 	{"push",		INSN_R,			"50+r",					INSN_ALL_MODES | INSN_DEF64},
 	{"syscall",		INSN_NONE,		"0F 05",				INSN_64},
