@@ -726,8 +726,49 @@ void x86_Emit(const char *filename, int lineno, const char *mspec, x86_Operand *
 		opA = opB;
 		opB = temp;
 		types = INSN_DR_R;
+	}
+	else if (types == INSN_RM_XMM)
+	{
+		x86_Operand *temp = opA;
+		opA = opB;
+		opB = temp;
+		types = INSN_XMM_RM;
+	}
+	else if (types == INSN_RM_MM)
+	{
+		x86_Operand *temp = opA;
+		opA = opB;
+		opB = temp;
+		types = INSN_MM_RM;
+	}
+	else if (types == INSN_GPRM32_MM)
+	{
+		x86_Operand *temp = opA;
+		opA = opB;
+		opB = temp;
+		types = INSN_MM_GPRM32;
+	}
+	else if (types == INSN_GPRM64_MM)
+	{
+		x86_Operand *temp = opA;
+		opA = opB;
+		opB = temp;
+		types = INSN_MM_GPRM64;
+	}
+	else if (types == INSN_GPRM32_XMM)
+	{
+		x86_Operand *temp = opA;
+		opA = opB;
+		opB = temp;
+		types = INSN_XMM_GPRM32;
+	}
+	else if (types == INSN_GPRM64_XMM)
+	{
+		x86_Operand *temp = opA;
+		opA = opB;
+		opB = temp;
+		types = INSN_XMM_GPRM64;
 	};
-
 
 	// mandatory prefix (if any) must come before REX and 66 etc
 	if (memcmp(mspec, "66 ", 3) == 0)
@@ -844,7 +885,9 @@ void x86_Emit(const char *filename, int lineno, const char *mspec, x86_Operand *
 			if (opB->gpr.num & 0x8) rex |= 0x1;
 			if (rex != 0x40) objSectionAppend(sect, &rex, 1);
 		}
-		else if (types == INSN_R_RM || types == INSN_XMM_RM || types == INSN_MM_XMMRM || types == INSN_R_CR)
+		else if (types == INSN_R_RM || types == INSN_XMM_RM || types == INSN_MM_XMMRM || types == INSN_R_CR || 
+			types == INSN_GPRM32_MM || types == INSN_GPRM64_MM || types == INSN_MM_GPRM32 || types == INSN_MM_GPRM64 || types == INSN_GPRM32_XMM || types == INSN_GPRM64_XMM || 
+			types == INSN_XMM_GPRM32 || types == INSN_XMM_GPRM64)
 		{
 			uint8_t rex = 0x40;
 			if (opA->gpr.opsz == 64 && (types != INSN_MM_XMMRM))
@@ -1469,6 +1512,46 @@ int x86_OpTypeMatch(int types, x86_Operand *opA, x86_Operand *opB)
 		return isR_RM(opA, opB, 1);
 	case INSN_R_RM:
 		return isR_RM(opA, opB, 0);
+	case INSN_MM_GPRM32:
+		return (typeA == OPTYPE_XMM) && (opA->xmm.opsz == 64) && (
+			(((typeB == OPTYPE_GPR) || (typeB == OPTYPE_REXGPR)) && (opB->gpr.opsz == 32))
+			|| ((typeB == OPTYPE_MEMREF) && (opB->memref.opsz == 32))
+			);
+	case INSN_MM_GPRM64:
+		return (typeA == OPTYPE_XMM) && (opA->xmm.opsz == 64) && (
+			(((typeB == OPTYPE_GPR) || (typeB == OPTYPE_REXGPR)) && (opB->gpr.opsz == 64))
+			|| ((typeB == OPTYPE_MEMREF) && (opB->memref.opsz == 64))
+			);
+	case INSN_GPRM32_MM:
+		return (typeB == OPTYPE_XMM) && (opB->xmm.opsz == 64) && (
+			(((typeA == OPTYPE_GPR) || (typeA == OPTYPE_REXGPR)) && (opA->gpr.opsz == 32))
+			|| ((typeA == OPTYPE_MEMREF) && (opA->memref.opsz == 32))
+			);
+	case INSN_GPRM64_MM:
+		return (typeB == OPTYPE_XMM) && (opB->xmm.opsz == 64) && (
+			(((typeA == OPTYPE_GPR) || (typeA == OPTYPE_REXGPR)) && (opA->gpr.opsz == 64))
+			|| ((typeA == OPTYPE_MEMREF) && (opA->memref.opsz == 64))
+			);
+	case INSN_XMM_GPRM32:
+		return (typeA == OPTYPE_XMM) && (opA->xmm.opsz == 128) && (
+			(((typeB == OPTYPE_GPR) || (typeB == OPTYPE_REXGPR)) && (opB->gpr.opsz == 32))
+			|| ((typeB == OPTYPE_MEMREF) && (opB->memref.opsz == 32))
+			);
+	case INSN_XMM_GPRM64:
+		return (typeA == OPTYPE_XMM) && (opA->xmm.opsz == 128) && (
+			(((typeB == OPTYPE_GPR) || (typeB == OPTYPE_REXGPR)) && (opB->gpr.opsz == 64))
+			|| ((typeB == OPTYPE_MEMREF) && (opB->memref.opsz == 64))
+			);
+	case INSN_GPRM32_XMM:
+		return (typeB == OPTYPE_XMM) && (opB->xmm.opsz == 128) && (
+			(((typeA == OPTYPE_GPR) || (typeA == OPTYPE_REXGPR)) && (opA->gpr.opsz == 32))
+			|| ((typeA == OPTYPE_MEMREF) && (opA->memref.opsz == 32))
+			);
+	case INSN_GPRM64_XMM:
+		return (typeB == OPTYPE_XMM) && (opB->xmm.opsz == 128) && (
+			(((typeA == OPTYPE_GPR) || (typeA == OPTYPE_REXGPR)) && (opA->gpr.opsz == 64))
+			|| ((typeA == OPTYPE_MEMREF) && (opA->memref.opsz == 64))
+			);
 	case INSN_R_RM_NO16:
 		return isR_RM(opA, opB, 0) && (opA->gpr.opsz != 16);
 	case INSN_RM8_R8:
@@ -1480,6 +1563,8 @@ int x86_OpTypeMatch(int types, x86_Operand *opA, x86_Operand *opB)
 	case INSN_XMM_RM:
 		return (typeA == OPTYPE_XMM) && ((typeB == OPTYPE_XMM)
 			|| ((typeB == OPTYPE_MEMREF) && (opB->memref.opsz == 128)));
+	case INSN_RM_XMM:
+		return ((typeA == OPTYPE_MEMREF) && (opA->memref.opsz == 128)) && (typeB == OPTYPE_XMM);
 	case INSN_RM8_I8:
 		return isRM_I(opA, opB, 8);
 	case INSN_RM16_I16:
@@ -1548,6 +1633,10 @@ int x86_OpTypeMatch(int types, x86_Operand *opA, x86_Operand *opB)
 			((typeB == OPTYPE_XMM) && (opB->xmm.opsz == 64))
 			|| ((typeB == OPTYPE_MEMREF) && (opB->memref.opsz == 64))
 			);
+	case INSN_RM_MM:
+		return (((typeA == OPTYPE_XMM) && (opA->xmm.opsz == 64))
+			|| ((typeA == OPTYPE_MEMREF) && (opA->memref.opsz == 64))
+			) && (typeB == OPTYPE_XMM) && (opB->xmm.opsz == 64);
 	case INSN_RM16_SREG:
 		return (((typeA == OPTYPE_MEMREF) && (opA->memref.opsz == 16)) || ((typeA == OPTYPE_GPR || typeA == OPTYPE_REXGPR) && (opA->gpr.opsz == 16))) && (typeB == OPTYPE_SREG);
 	case INSN_RM64_SREG:

@@ -249,6 +249,11 @@ enum
 	INSN_XMM_RM,
 	
 	/**
+	 * r/m + xmm register
+	 */
+	INSN_RM_XMM,
+	
+	/**
 	 * XMM register + r/m + imm8 for some weird instructions.
 	 */
 	INSN_XMM_RM_IMM8,
@@ -306,9 +311,54 @@ enum
 	INSN_MM_XMMRM,
 	
 	/**
-	 * MMX + MMX
+	 * MMX + RM
 	 */
 	INSN_MM_RM,
+	
+	/**
+	 * RM + MMX
+	 */
+	INSN_RM_MM,
+	
+	/**
+	 * MMX + 32-bit RM or GPR
+	 */
+	INSN_MM_GPRM32,
+	
+	/**
+	 * MMX + 64-bit RM or GPR
+	 */
+	INSN_MM_GPRM64,
+	
+	/**
+	 * 32-bit RM or GPR + MMX
+	 */
+	INSN_GPRM32_MM,
+	
+	/**
+	 * 64-bit RM or GPR + MMX
+	 */
+	INSN_GPRM64_MM,
+	
+	/**
+	 * XMM + 32-bit RM or GPR
+	 */
+	INSN_XMM_GPRM32,
+	
+	/**
+	 * XMM + 64-bit RM or GPR
+	 */
+	INSN_XMM_GPRM64,
+	
+	/**
+	 * 32-bit RM or GPR + XMM
+	 */
+	INSN_GPRM32_XMM,
+	
+	/**
+	 * 64-bit RM or GPR + XMM
+	 */
+	INSN_GPRM64_XMM,
 	
 	/**
 	 * Single immediate operand of any size.
