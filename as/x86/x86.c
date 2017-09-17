@@ -895,6 +895,11 @@ void x86_Emit(const char *filename, int lineno, const char *mspec, x86_Operand *
 				rex |= 0x08;	// REX.W
 			};
 		
+			if (types == INSN_XMM_GPRM64)
+			{
+				rex |= 0x08;	// REX.W
+			};
+			
 			if (opA->gpr.num & 0x8)
 			{
 				rex |= 0x4;

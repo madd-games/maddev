@@ -330,7 +330,7 @@ char* lexTokenize(Token *out, const char *filename, const char *input, TokenSpec
 			};
 		};
 		
-		if (longestMatch == -1)
+		if (currentLongest == -1 || longestMatch == 0)
 		{
 			char buffer[1024];
 			sprintf(buffer, "%s:%d:%d: unrecognised character in input", filename, lineno, col);

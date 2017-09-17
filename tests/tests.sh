@@ -32,6 +32,7 @@ test_section() {
 # Run all the unit tests
 . ${testdir}/liblex.sh
 . ${testdir}/as-${AS_FAMILY}.sh
+. ${testdir}/bnfc.sh
 
 # Keep this at the very end!
 echo "${GREEN}ALL UNIT TESTS PASSED.${NC}"
