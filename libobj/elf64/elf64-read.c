@@ -62,6 +62,11 @@ Object* objRead(const char *filename)
 	Elf64_Shdr *sectable = (Elf64_Shdr*) (filebuf + ELF_READ64(ehdr->e_shoff));
 	size_t numSections = ELF_READ16(ehdr->e_shnum);
 	
+	Elf64_Phdr *progHeads = (Elf64_Phdr*) (filebuf + ELF_READ64(ehdr->e_phoff));
+	size_t numProgHeads = ELF_READ16(ehdr->e_phnum);
+	
+	Section **sectPointers = (Section**) malloc(sizeof(void*) * numSections);
+	
 	Object *obj = objNew();
 	switch (ELF_READ16(ehdr->e_type))
 	{
@@ -101,6 +106,7 @@ Object* objRead(const char *filename)
 				char *name = sectNameStrtab + ELF_READ32(sectable[i].sh_name);
 				
 				Section *sect = objCreateSection(obj, name, libobjType, libobjFlags);
+				sectPointers[i] = sect;
 				if (sect != NULL)
 				{
 					if (type == SHT_PROGBITS)
@@ -123,13 +129,156 @@ Object* objRead(const char *filename)
 					sect->paddr = sect->vaddr;
 					sect->align = ELF_READ64(sectable[i].sh_addralign);
 					sect->aux.index = i;
+					
+					// cross-reference with the program headers to find the physical
+					// address. if it's not there, we just default to the virtual
+					// address being equal to the physical.
+					size_t j;
+					for (j=0; j<numProgHeads; j++)
+					{
+						Elf64_Phdr *phdr = &progHeads[j];
+						uint64_t vaddr = ELF_READ64(phdr->p_vaddr);
+						
+						if (vaddr == sect->vaddr)
+						{
+							sect->paddr = ELF_READ64(phdr->p_paddr);
+							break;
+						};
+					};
 				};
 			};
 		};
 	};
 	
-	// TODO: symbols, relocations, entry point
+	// now load all the SYMTAB sections, to get symbols
+	for (i=0; i<numSections; i++)
+	{
+		uint32_t type = ELF_READ32(sectable[i].sh_type);
+		if (type == SHT_SYMTAB)
+		{
+			Elf64_Shdr *sectStrTab = &sectable[ELF_READ32(sectable[i].sh_link)];
+			char *strtab = (filebuf + ELF_READ64(sectStrTab->sh_offset));
+			
+			// only bother if the size is correct
+			if (ELF_READ64(sectable[i].sh_entsize) != sizeof(Elf64_Sym))
+			{
+				return NULL;
+			};
+			
+			size_t numSyms = ELF_READ64(sectable[i].sh_size) / sizeof(Elf64_Sym);
+			Elf64_Sym *symtab = (Elf64_Sym*) (filebuf + ELF_READ64(sectable[i].sh_offset));
+			
+			size_t j;
+			for (j=0; j<numSyms; j++)
+			{
+				if (ELF_READ32(symtab[j].st_name) != 0)
+				{
+					const char *name = &strtab[ELF_READ32(symtab[j].st_name)];
+					int type = symtab[j].st_info & 0xF;
+					int binding = symtab[j].st_info >> 4;
+					
+					int libobjType;
+					int found = 1;
+					switch (type)
+					{
+					case STT_NOTYPE:
+						libobjType = SYMT_NONE;
+						break;
+					case STT_OBJECT:
+						libobjType = SYMT_OBJECT;
+						break;
+					case STT_FUNC:
+						libobjType = SYMT_FUNC;
+						break;
+					default:
+						found = 0;
+						break;
+					};
+
+					switch (ELF_READ16(symtab[j].st_shndx))
+					{
+					case SHN_UNDEF:
+					case SHN_ABS:		/* absolute symbols not yet supported */
+						found = 0;
+						break;
+					};
+					
+					if (!found) continue;
+					Symbol *symbol = (Symbol*) malloc(sizeof(Symbol));
+					memset(symbol, 0, sizeof(Symbol));
+					symbol->sect = sectPointers[ELF_READ16(symtab[j].st_shndx)];
+					symbol->name = strdup(name);
+					symbol->offset = ELF_READ64(symtab[j].st_value);
+					symbol->size = ELF_READ64(symtab[j].st_size);
+					symbol->type = libobjType;
+					
+					switch (binding)
+					{
+					case STB_GLOBAL:
+						symbol->binding = SYMB_GLOBAL;
+						break;
+					case STB_WEAK:
+						symbol->binding = SYMB_WEAK;
+						break;
+					case STB_LOCAL:
+					default:
+						symbol->binding = SYMB_LOCAL;
+						break;
+					};
+					
+					symbol->next = obj->symbols;
+					obj->symbols = symbol;
+				};
+			};
+		};
+	};
 	
+	// now go through all the REL(A) sections (currently only RELA)
+	for (i=0; i<numSections; i++)
+	{
+		uint32_t type = ELF_READ32(sectable[i].sh_type);
+		if (type == SHT_RELA)
+		{
+			Section *section = sectPointers[ELF_READ32(sectable[i].sh_info)];
+			Elf64_Shdr *sectSymbols = &sectable[ELF_READ32(sectable[i].sh_link)];
+			Elf64_Shdr *sectStrTab = &sectable[ELF_READ32(sectSymbols->sh_link)];
+			char *strtab = (filebuf + ELF_READ64(sectStrTab->sh_offset));
+			Elf64_Sym *symtab = (Elf64_Sym*) (filebuf + ELF_READ64(sectSymbols->sh_offset));
+			
+			if (ELF_READ64(sectable[i].sh_entsize) != sizeof(Elf64_Rela))
+			{
+				// invalid size
+				return NULL;
+			};
+			
+			size_t numRela = ELF_READ64(sectable[i].sh_size) / sizeof(Elf64_Rela);
+			Elf64_Rela *rela = (Elf64_Rela*) (filebuf + ELF_READ64(sectable[i].sh_offset));
+			
+			for (; numRela--; rela++)
+			{
+				uint64_t info = ELF_READ64(rela->r_info);
+				uint64_t offset = ELF_READ64(rela->r_offset);
+				int64_t addend = ELF_READ64(rela->r_addend);
+				
+				uint64_t type = ELF64_R_TYPE(info);
+				uint64_t symidx = ELF64_R_SYM(info);
+				
+				Reloc *reloc = (Reloc*) malloc(sizeof(Reloc));
+				memset(reloc, 0, sizeof(Reloc));
+				
+				if (elfReadReloc(type, &reloc->size, &reloc->type) != 0) return NULL;
+				reloc->offset = offset;
+				reloc->symbol = strdup(&strtab[ELF_READ32(symtab[symidx].st_name)]);
+				reloc->addend = addend;
+				
+				objSectionAddReloc(section, reloc);
+			};
+		};
+	};
+	
+	// TODO: REL-type relocations, entry point
+	
+	free(sectPointers);
 	free(filebuf);
 	return obj;
 };

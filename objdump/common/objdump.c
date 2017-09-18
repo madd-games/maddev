@@ -60,6 +60,53 @@ const char *getSectypeName(int type)
 	};
 };
 
+const char *getSymtName(int symt)
+{
+	switch (symt)
+	{
+	case SYMT_NONE:
+		return "NONE";
+	case SYMT_FUNC:
+		return "FUNC";
+	case SYMT_OBJECT:
+		return "OBJECT";
+	default:
+		return "?";
+	};
+};
+
+const char *getSymbName(int symb)
+{
+	switch (symb)
+	{
+	case SYMB_LOCAL:
+		return "LOCAL";
+	case SYMB_GLOBAL:
+		return "GLOBAL";
+	case SYMB_WEAK:
+		return "WEAK";
+	default:
+		return "?";
+	};
+};
+
+const char *getRelszName(int relsz)
+{
+	switch (relsz)
+	{
+	case REL_BYTE:
+		return "BYTE";
+	case REL_WORD:
+		return "WORD";
+	case REL_DWORD:
+		return "DWORD";
+	case REL_QWORD:
+		return "QWORD";
+	default:
+		return "?";
+	};
+};
+
 int main(int argc, char *argv[])
 {
 	if (argc != 3)
@@ -69,6 +116,8 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "\tAll options show basic info, plus additional info as follows:\n");
 		fprintf(stderr, "\n");
 		fprintf(stderr, "\t-l\tList sections.\n");
+		fprintf(stderr, "\t-s\tList symbols.\n");
+		fprintf(stderr, "\t-r\tList relocations.\n");
 		return 1;
 	};
 	
@@ -86,17 +135,48 @@ int main(int argc, char *argv[])
 	if (strcmp(argv[1], "-l") == 0)
 	{
 		printf("Sections:\n");
-		printf("%-20s%-10s%-20s%-20s%-10s\n", "Name", "Type", "Address", "Alignment", "Flags");
+		printf("%-20s%-10s%-20s%-20s%-20s%-20s%-10s\n", "Name", "Type", "Address", "P. Address",
+								"Size", "Alignment", "Flags");
 		
 		Section *sect;
 		for (sect=obj->sections; sect!=NULL; sect=sect->next)
 		{
-			printf("%-20s%-10s0x%016lX  0x%016lX  %c%c%c\n",
-				sect->name, getSectypeName(sect->type), sect->vaddr, sect->align,
+			printf("%-20s%-10s0x%016lX  0x%016lX  0x%016lX  0x%016lX  %c%c%c\n",
+				sect->name, getSectypeName(sect->type), sect->vaddr, sect->paddr, sect->size, sect->align,
 				(sect->flags & SEC_READ) ? 'R':' ',
 				(sect->flags & SEC_WRITE) ? 'W':' ',
 				(sect->flags & SEC_EXEC) ? 'X':' '
 			);
+		};
+	}
+	else if (strcmp(argv[1], "-s") == 0)
+	{
+		printf("Symbols:\n");
+		printf("%-40s%-10s%-10s%s\n", "Name", "Type", "Binding", "Value");
+		
+		Symbol *sym;
+		for (sym=obj->symbols; sym!=NULL; sym=sym->next)
+		{
+			printf("%-40s%-10s%-10s%s+0x%lX\n", sym->name, getSymtName(sym->type), getSymbName(sym->binding),
+				sym->sect->name, sym->offset);
+		};
+	}
+	else if (strcmp(argv[1], "-r") == 0)
+	{
+		printf("Relocations:\n");
+		printf("%-30s%-10s%-20s%s\n", "Position", "Size", "Type", "Target");
+		
+		Section *sect;
+		for (sect=obj->sections; sect!=NULL; sect=sect->next)
+		{	
+			Reloc *reloc;
+			for (reloc=sect->relocs; reloc!=NULL; reloc=reloc->next)
+			{
+				char offspec[64];
+				snprintf(offspec, 64, "%s+0x%016lX", sect->name, reloc->offset);
+				printf("%-30s%-10s%-20s%s%+ld\n", offspec, getRelszName(reloc->size),
+					objGetRelocTypeName(reloc->type), reloc->symbol, reloc->addend);
+			};
 		};
 	}
 	else

@@ -26,54 +26,23 @@
 	OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "elf64.h"
+#include "relocs.h"
 
-typedef struct
-{
-	int				size;
-	int				type;
-	uint64_t			elftype;
-} RelocMapping;
-
-static RelocMapping relocTypes[] = {
-#if ELF_MACHINE_NUMBER == 62					/* x86_64 */
-	{REL_BYTE,  REL_X86_ABSOLUTE,	14},			/* R_X86_64_8 */
-	{REL_WORD,  REL_X86_ABSOLUTE,	12},			/* R_X86_64_16 */
-	{REL_DWORD, REL_X86_ABSOLUTE,	11},			/* R_X86_64_32S */
-	{REL_QWORD, REL_X86_ABSOLUTE,	1},			/* R_X86_64_64 */
-	
-	{REL_BYTE,  REL_X86_RELATIVE,	15},			/* R_X86_64_PC8 */
-	{REL_WORD,  REL_X86_RELATIVE,	13},			/* R_X86_64_PC16 */
-	{REL_DWORD, REL_X86_RELATIVE,	2},			/* R_X86_64_PC32 */
-#else
-#error Relocations for this architecture not specified!
-#endif
-	{-1, -1, 0}						/* list terminator */
+/**
+ * This list MUST be in sync with the enum in relocs.h!
+ */
+static const char *relocNames[REL_TYPES_COUNT] = {
+	"REL_NULL",
+	"REL_X86_ABSOLUTE",
+	"REL_X86_RELATIVE",
 };
 
-uint64_t elfGetReloc(int size, int type)
+const char* objGetRelocTypeName(int reltype)
 {
-	RelocMapping *scan;
-	for (scan=relocTypes; scan->size!=-1; scan++)
+	if (reltype >= 0 && reltype < REL_TYPES_COUNT)
 	{
-		if ((scan->size == size) && (scan->type == type)) return scan->elftype;
+		return relocNames[reltype];
 	};
 	
-	return 0;	/* "none" */
-};
-
-int elfReadReloc(uint64_t elfrel, int *size, int *type)
-{
-	RelocMapping *scan;
-	for (scan=relocTypes; scan->size!=-1; scan++)
-	{
-		if (scan->elftype == elfrel)
-		{
-			*size = scan->size;
-			*type = scan->type;
-			return 0;
-		};
-	};
-	
-	return -1;
+	return "?";
 };

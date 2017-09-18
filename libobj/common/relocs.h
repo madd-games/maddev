@@ -33,7 +33,8 @@
  * The full enum of relocation types, for every supported architecture, independently of the
  * output format. This is for the internal representation; numbering doesn't matter except
  * that REL_NULL should be 0 and all relocations must have different numbers. It is therefore
- * completly acceptable to add new entries in the middle of the list etc.
+ * completly acceptable to add new entries in the middle of the list etc. But make sure you
+ * sync it with the list in relocs.c!
  */
 enum
 {
@@ -47,6 +48,16 @@ enum
 	 */
 	REL_X86_ABSOLUTE,
 	REL_X86_RELATIVE,
+	
+	/**
+	 * End of list!
+	 */
+	REL_TYPES_COUNT,
 };
+
+/**
+ * Get the name of a relocation or "?".
+ */
+const char* objGetRelocTypeName(int reltype);
 
 #endif

@@ -103,6 +103,12 @@ int objSectionReloc(Section *sect, const char *symbol, int size, int type, int64
 	return 0;
 };
 
+void objSectionAddReloc(Section *sect, Reloc *rel)
+{
+	rel->next = sect->relocs;
+	sect->relocs = rel;
+};
+
 int objSectionResv(Section *sect, size_t size)
 {
 	if (sect->type == SECTYPE_PROGBITS) return -1;

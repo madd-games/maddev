@@ -158,6 +158,7 @@ int objWrite(Object *obj, const char *filename)
 			break;
 		case SYMT_FUNC:
 			t = STT_FUNC;
+			break;
 		};
 		
 		symtab[index].st_info = ELF_MAKE_STINFO(b, t);

@@ -206,7 +206,7 @@ typedef struct Symbol_
 	/**
 	 * The offset into the section where this symbol is defined.
 	 */
-	int64_t					offset;
+	uint64_t				offset;
 	
 	/**
 	 * Size of symbol (if applicable; else 0).
@@ -297,6 +297,11 @@ int objSectionAppend(Section *sect, const void *data, size_t size);
  * otherwise returns 0 on success. Defined in common/libobj.c.
  */
 int objSectionReloc(Section *sect, const char *symbol, int size, int type, int64_t addend);
+
+/**
+ * Add a relocation to a section.
+ */
+void objSectionAddReloc(Section *sect, Reloc *rel);
 
 /**
  * Reserve some number of bytes in a section, at the end. If this section is SECTYPE_PROGBITS, this

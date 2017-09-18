@@ -215,5 +215,6 @@ typedef struct
 } Elf64_Phdr;
 
 uint64_t elfGetReloc(int size, int type);
+int elfReadReloc(uint64_t elfrel, int *size, int *type);
 
 #endif
