@@ -201,6 +201,11 @@ enum
 	INSN_R_RM_NO16,
 	
 	/**
+	 * Register and r/m (neither 8-bit nor 16-bit).
+	 */
+	INSN_RM_R_NO16,
+	
+	/**
 	 * r/m and register (8-bit)
 	 */
 	INSN_RM8_R8,
@@ -359,6 +364,11 @@ enum
 	 * 64-bit RM or GPR + XMM
 	 */
 	INSN_GPRM64_XMM,
+	
+	/**
+	 * 64-bit or 32-bit GPR + XMM
+	 */
+	INSN_GPR_XMM,
 	
 	/**
 	 * Single immediate operand of any size.

@@ -633,4 +633,29 @@ movdqa xmm2, XMMWORD PTR test			; MODE32 MODE64
 movdqa XMMWORD PTR test, xmm2			; MODE32 MODE64
 movdqu xmm2, XMMWORD PTR test			; MODE32 MODE64
 movdqu XMMWORD PTR test, xmm2			; MODE32 MODE64
-movdq2q mm0, xmm2				; MODE16 MODE32 MODE64
+movdq2q mm0, xmm3				; MODE16 MODE32 MODE64
+movhlps XMMWORD PTR test, xmm4			; MODE32 MODE64
+movhpd xmm5, XMMOWRD PTR test			; MODE32 MODE64
+movhpd XMMOWRD PTR test, xmm5			; MODE32 MODE64
+movhps xmm6, XMMOWRD PTR test			; MODE32 MODE64
+movhps XMMOWRD PTR test, xmm6			; MODE32 MODE64
+movlhps XMMWORD PTR test, xmm7			; MODE32 MODE64
+movlpd xmm0, XMMOWRD PTR test			; MODE32 MODE64
+movlpd XMMOWRD PTR test, xmm0			; MODE32 MODE64
+movlps xmm1, XMMOWRD PTR test			; MODE32 MODE64
+movlps XMMOWRD PTR test, xmm1			; MODE32 MODE64
+movmskpd eax, xmm0				; MODE32 MODE64
+movmskpd rax, xmm11				; MODE32 MODE64
+movmskps eax, xmm0				; MODE32 MODE64
+movmskps rax, xmm11				; MODE32 MODE64
+movntdqa xmm2, XMMWORD PTR test			; MODE32 MODE64
+movntdq XMMWORD PTR test, xmm3			; MODE32 MODE64
+movnti eax, DWORD PTR test			; MODE16 MODE32 MODE64
+movnti rax, QWORD PTR test			; MODE16 MODE32 MODE64
+movntpd XMMWORD PTR test, xmm4			; MODE32 MODE64
+movntps XMMWORD PTR test, xmm5			; MODE32 MODE64
+movntq QWORD PTR test, mm0			; MODE32 MODE64 MODE64
+movq mm0, QWORD PTR test			; MODE32 MODE64
+movq QWORD PTR test, mm0			; MODE32 MODE64
+movq mm0, XMMWORd PTR test			; MODE32 MODE64
+movq XMMWORD PTR test, mm0			; MODE32 MODE64
