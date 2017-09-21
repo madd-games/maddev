@@ -654,8 +654,45 @@ movnti eax, DWORD PTR test			; MODE16 MODE32 MODE64
 movnti rax, QWORD PTR test			; MODE16 MODE32 MODE64
 movntpd XMMWORD PTR test, xmm4			; MODE32 MODE64
 movntps XMMWORD PTR test, xmm5			; MODE32 MODE64
-movntq QWORD PTR test, mm0			; MODE32 MODE64 MODE64
+movntq QWORD PTR test, mm0			; MODE16 MODE32 MODE64
 movq mm0, QWORD PTR test			; MODE32 MODE64
 movq QWORD PTR test, mm0			; MODE32 MODE64
 movq mm0, XMMWORd PTR test			; MODE32 MODE64
 movq XMMWORD PTR test, mm0			; MODE32 MODE64
+movq2dq xmm0, mm0				; MODE16 MODE32 MODE64
+movsb						; MODE16 MODE32 MODE64
+movsw						; MODE16 MODE32 MODE64
+movsd						; MODE16 MODE32 MODE64
+movsq						; MODE64
+movsd xmm0, XMMWORD PTR test			; MODE32 MODE64
+movsd XMMWORD PTR test, xmm0			; MODE32 MODE64
+movshdup xmm0, XMMWORD PTR test			; MODE32 MODE64
+movsldup xmm0, XMMWORD PTR test			; MODE32 MODE64
+movss xmm0, XMMWORD PTR test			; MODE32 MODE64
+movss XMMWORD PTR test, xmm0			; MODE32 MODE64
+movsx ax, BYTE PTR test				; MODE16 MODE32 MODE64
+movsx eax, BYTE PTR test			; MODE16 MODE32 MODE64
+movsx rax, BYTE PTR test			; MODE64
+movsx eax, WORD PTR test			; MODE16 MODE32 MODE64
+movsx rax, WORD PTR test			; MODE64
+movsxd rax, DWORD PTR test			; MODE64
+movupd xmm0, XMMWORD PTR test			; MODE32 MODE64
+movupd XMMWORD PTR test, xmm0			; MODE32 MODE64
+movups xmm0, XMMWORD PTR test			; MODE32 MODE64
+movups XMMWORD PTR test, xmm0			; MODE32 MODE64
+movzx ax, BYTE PTR test				; MODE16 MODE32 MODE64
+movzx eax, BYTE PTR test			; MODE16 MODE32 MODE64
+movzx rax, BYTE PTR test			; MODE64
+movzx eax, WORD PTR test			; MODE16 MODE32 MODE64
+movzx rax, WORD PTR test			; MODE64
+; TODO: mp2adbw
+mul BYTE PTR test				; MODE16 MODE32 MODE64
+mul WORD PTR test				; MODE16 MODE32 MODE64
+mul DWORD PTR test				; MODE16 MODE32 MODE64
+mul QWORD PTR test				; MODE64
+mulpd xmm0, XMMWORD PTR test			; MODE32 MODE64
+mulps xmm0, XMMWORD PTR test			; MODE32 MODE64
+mulsd xmm0, XMMWORD PTR test			; MODE32 MODE64
+mulss xmm0, XMMWORD PTR test			; MODE32 MODE64
+; TODO: mulx
+mwait						; MODE16 MODE32 MODE64

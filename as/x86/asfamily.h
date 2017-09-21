@@ -196,6 +196,16 @@ enum
 	INSN_R_RM,
 	
 	/**
+	 * Specific register and r/m sizes.
+	 */
+	INSN_R16_RM8,
+	INSN_R32_RM8,
+	INSN_R64_RM8,
+	INSN_R32_RM16,
+	INSN_R64_RM16,
+	INSN_R64_RM32,
+	
+	/**
 	 * Register and r/m (neither 8-bit nor 16-bit).
 	 */
 	INSN_R_RM_NO16,
@@ -314,6 +324,11 @@ enum
 	 * MMX + XMM/rm
 	 */
 	INSN_MM_XMMRM,
+	
+	/**
+	 * XMM + MM
+	 */
+	INSN_XMM_MM,
 	
 	/**
 	 * MMX + RM
