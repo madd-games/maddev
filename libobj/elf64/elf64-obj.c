@@ -163,7 +163,14 @@ int objWrite(Object *obj, const char *filename)
 		
 		symtab[index].st_info = ELF_MAKE_STINFO(b, t);
 		symtab[index].st_other = 0;
-		symtab[index].st_shndx = ELF_MAKE16(sym->sect->aux.index);
+		if (sym->sect != NULL)
+		{
+			symtab[index].st_shndx = ELF_MAKE16(sym->sect->aux.index);
+		}
+		else
+		{
+			symtab[index].st_shndx = ELF_MAKE16(SHN_ABS);
+		};
 		symtab[index].st_value = ELF_MAKE64(sym->offset);
 		symtab[index].st_size = ELF_MAKE64(sym->size);
 	};
@@ -314,7 +321,9 @@ int objWrite(Object *obj, const char *filename)
 		}
 		else
 		{
-			elfHeader.e_entry = ELF_MAKE64(sym->sect->vaddr + sym->offset);
+			uint64_t vaddr = 0;
+			if (sym->sect != NULL) vaddr = sym->sect->vaddr;
+			elfHeader.e_entry = ELF_MAKE64(vaddr + sym->offset);
 		};
 	};
 	elfHeader.e_phoff = ELF_MAKE64(offProgHeads);

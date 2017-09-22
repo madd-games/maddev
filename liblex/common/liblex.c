@@ -342,7 +342,7 @@ char* lexTokenize(Token *out, const char *filename, const char *input, TokenSpec
 			Token *token = (Token*) plCreate(sizeof(Token));
 			token->filename = filename;
 			token->type = specs[currentLongest].type;
-			token->value = (char*) malloc(longestMatch);
+			token->value = (char*) malloc(longestMatch+1);
 			token->value[longestMatch] = 0;
 			memcpy(token->value, input, longestMatch);
 			token->lineno = lineno;

@@ -1,0 +1,98 @@
+/*
+	Madd Development Tools
+
+	Copyright (c) 2017, Madd Games.
+	All rights reserved.
+	
+	Redistribution and use in source and binary forms, with or without
+	modification, are permitted provided that the following conditions are met:
+	
+	* Redistributions of source code must retain the above copyright notice, this
+	  list of conditions and the following disclaimer.
+	
+	* Redistributions in binary form must reproduce the above copyright notice,
+	  this list of conditions and the following disclaimer in the documentation
+	  and/or other materials provided with the distribution.
+	
+	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+	AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+	IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+	DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+	FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+	DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+	SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+	CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+	OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+	OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+include 'ldscript.h';
+
+/**
+ * ldscript.bnf
+ * Grammar of a linker script.
+ */
+
+tokenizer ldscript_tokenize
+	// comments and whitespaces in linker scripts
+					'$+'
+					'\\/\\/.*?\n'
+					'\\/\\*.*?(\\*\\/)'
+	
+	// other tokens
+	TOK_IDENTIFIER			'[_.a-zA-Z][_.a-zA-Z0-9]*'
+	TOK_SEMICOLON			'\\;'
+	TOK_OPEN_BRACKET		'\\('
+	TOK_CLOSE_BRACKET		'\\)'
+	TOK_OPEN_BRACE			'\\{'
+	TOK_CLOSE_BRACE			'\\}'
+	TOK_ASSIGNMENT			'\\='
+	TOK_ADD_SUB			'[\\-\\+]'
+	TOK_STRING			'\"(\\\"|.)*?\"'
+	TOK_VALUE			'(0[xX][0-9a-fA-F]+|0[0-7]*|[1-9][0-9]*)'
+;
+
+terminal <Identifier> TOK_IDENTIFIER;
+terminal <Semicolon> TOK_SEMICOLON;
+terminal <OpenBracket> TOK_OPEN_BRACKET;
+terminal <CloseBracket> TOK_CLOSE_BRACKET;
+terminal <OpenBrace> TOK_OPEN_BRACE;
+terminal <CloseBrace> TOK_CLOSE_BRACE;
+terminal <AddSubOp> TOK_ADD_SUB;
+terminal <String> TOK_STRING;
+terminal <Value> TOK_VALUE;
+
+/**
+ * Primary expression.
+ */
+<PrimaryExpr> ::= <Value value> | <Identifier name> | '(' <Expr expr> ')' ;
+
+/**
+ * Sum expression: the sum of a chain of values.
+ */
+<SumAffix> ::= <AddSubOp op> <PrimaryExpr arg>;
+<SumAffixList> ::= <SumAffix affix> <SumAffixList next> | <SumAffix affix>;
+<SumExpr> ::= <PrimaryExpr primary> <SumAffixList chain> | <PrimaryExpr primary>;
+
+/**
+ * Full expression.
+ */
+<Expr> ::= <SumExpr sum>;
+
+/**
+ * Entry statement.
+ */
+<EntryStatement> ::= 'entry' '(' <Identifier symbol> ')' ';' ;
+
+/**
+ * Symbol assignment statement.
+ */
+<SymbolAssignment> ::= <Identifier symbol> '=' <Expr expr> ';' ;
+
+/**
+ * Arbitrary statement and statement list.
+ */
+<Statement> ::= <EntryStatement entry> | <SymbolAssignment symAssign>;
+<StatementList> ::= <Statement statement> <StatementList next> | <Statement statement>;
+
+<LinkerScript> ::= <StatementList statements> <EOF> | <EOF>;

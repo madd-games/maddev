@@ -198,7 +198,7 @@ Object* objRead(const char *filename)
 					switch (ELF_READ16(symtab[j].st_shndx))
 					{
 					case SHN_UNDEF:
-					case SHN_ABS:		/* absolute symbols not yet supported */
+					case SHN_COMMON:	/* common symbols not yet supported */
 						found = 0;
 						break;
 					};
@@ -206,7 +206,14 @@ Object* objRead(const char *filename)
 					if (!found) continue;
 					Symbol *symbol = (Symbol*) malloc(sizeof(Symbol));
 					memset(symbol, 0, sizeof(Symbol));
-					symbol->sect = sectPointers[ELF_READ16(symtab[j].st_shndx)];
+					if (ELF_READ16(symtab[j].st_shndx) == SHN_ABS)
+					{
+						symbol->sect = NULL;
+					}
+					else
+					{
+						symbol->sect = sectPointers[ELF_READ16(symtab[j].st_shndx)];
+					};
 					symbol->name = strdup(name);
 					symbol->offset = ELF_READ64(symtab[j].st_value);
 					symbol->size = ELF_READ64(symtab[j].st_size);

@@ -78,7 +78,7 @@
 #define	OBJTYPE_SHARED				2	/* shared library */
 
 /**
- * Structures used to represent types in specific byte order. We defined that as structures to
+ * Structures used to represent types in specific byte order. We define that as structures to
  * prevent the compiler from accepting writes to the wrong type.
  */
 #define	OBJ_NEWTYPE(oldtype, newname) typedef struct {oldtype val;} newname;
@@ -189,7 +189,7 @@ typedef struct Symbol_
 	struct Symbol_*				next;
 	
 	/**
-	 * The section to which this symbol belongs.
+	 * The section to which this symbol belongs. NULL means absolute symbol.
 	 */
 	Section*				sect;
 	
@@ -342,5 +342,11 @@ int objWrite(Object *obj, const char *filename);
  * object file (e.g. to implicitly create an import library), use objImport().
  */
 Object* objRead(const char *filename);
+
+/**
+ * Import an object. For normal relocatable files, this simply reads the object; for shared libraries it
+ * generates an import library. Always returns an object of type OBJTYPE_RELOC.
+ */
+Object* objImport(const char *filename);
 
 #endif
