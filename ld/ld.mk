@@ -22,6 +22,6 @@ ld/%.o: $(SRCDIR)/ld/%.c
 
 ld-bnf/%.o: $(SRCDIR)/ld/%.bnf out/bnfc
 	@mkdir -p $(dir $@)
-	cat $< | out/bnfc > bnf.c
+	cat $< | sed 's/\r$//' | out/bnfc > bnf.c
 	$(HOSTCC) -c bnf.c -o $@ $(LD_CFLAGS)
 
