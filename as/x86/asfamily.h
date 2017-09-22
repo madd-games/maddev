@@ -254,6 +254,13 @@ enum
 	INSN_EAX_I8,
 	
 	/**
+	 * mainly for OUT
+	 */
+	INSN_I8_AL,
+	INSN_I8_AX,
+	INSN_I8_EAX,
+	
+	/**
 	 * specific register operand
 	 */
 	INSN_AX,
@@ -426,11 +433,18 @@ enum
 	INSN_R_RM_I32,
 	
 	/**
-	 * Register (non-8-bit) + r/m (matching size to register) + immediate value (also matching size if not 8-bit)
+	 * AX (various sizes) and DX.
 	 */
 	INSN_AL_DX,
 	INSN_AX_DX,
 	INSN_EAX_DX,
+	
+	/**
+	 * DX and AX (various sizes)
+	 */
+	INSN_DX_AL,
+	INSN_DX_AX,
+	INSN_DX_EAX,
 	
 	/**
 	 * Weird thingy for int instruction
