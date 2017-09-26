@@ -393,6 +393,11 @@ enum
 	INSN_GPR_XMM,
 	
 	/**
+	 * 64-bit or 32-bit GPR + MM
+	 */
+	INSN_GPR_MM,
+	
+	/**
 	 * Single immediate operand of any size.
 	 */
 	INSN_IMM,

@@ -936,7 +936,7 @@ void x86_Emit(const char *filename, int lineno, const char *mspec, x86_Operand *
 		else if (types == INSN_R_RM || types == INSN_XMM_RM || types == INSN_MM_XMMRM || types == INSN_R_CR || 
 			types == INSN_GPRM32_MM || types == INSN_GPRM64_MM || types == INSN_MM_GPRM32 || types == INSN_MM_GPRM64 || types == INSN_GPRM32_XMM || types == INSN_GPRM64_XMM || 
 			types == INSN_XMM_GPRM32 || types == INSN_XMM_GPRM64 || types == INSN_GPR_XMM || types == INSN_XMM_MM || types == INSN_R16_RM8 || types == INSN_R32_RM8 || types == INSN_R64_RM8
-			|| types == INSN_R32_RM16 || types == INSN_R64_RM16 || types == INSN_R64_RM32)
+			|| types == INSN_R32_RM16 || types == INSN_R64_RM16 || types == INSN_R64_RM32 || types == INSN_GPR_MM)
 		{
 			uint8_t rex = 0x40;
 			if (opA->gpr.opsz == 64 && (types != INSN_MM_XMMRM))
@@ -1626,6 +1626,9 @@ int x86_OpTypeMatch(int types, x86_Operand *opA, x86_Operand *opB)
 			);
 	case INSN_GPR_XMM:
 		return (typeB == OPTYPE_XMM) && (opB->xmm.opsz == 128) &&
+			(((typeA == OPTYPE_GPR) || (typeA == OPTYPE_REXGPR)) && ((opA->gpr.opsz == 32) || (opA->gpr.opsz == 64)));
+	case INSN_GPR_MM:
+		return (typeB == OPTYPE_XMM) && (opB->xmm.opsz == 64) &&
 			(((typeA == OPTYPE_GPR) || (typeA == OPTYPE_REXGPR)) && ((opA->gpr.opsz == 32) || (opA->gpr.opsz == 64)));
 	case INSN_R_RM_NO16:
 		return isR_RM(opA, opB, 0) && (opA->gpr.opsz != 16);
