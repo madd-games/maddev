@@ -849,7 +849,8 @@ void x86_Emit(const char *filename, int lineno, const char *mspec, x86_Operand *
 	
 	// emit the size override prefix is necessary
 	if ((types == INSN_R16_I16) || (types == INSN_R32_I32) || (types == INSN_R8_RM8) || (types == INSN_R_RM) || (types == INSN_AX_I) || (types == INSN_EAX_I) || (types == INSN_A_OFFSET)
-		|| (types == INSN_R16_RM8) || (types == INSN_R32_RM8) || (types == INSN_R64_RM8) || (types == INSN_R32_RM16) || (types == INSN_R64_RM16) || (types == INSN_R64_RM32) || (types == INSN_RM_I8) || (types == INSN_AX_I8) || (types == INSN_EAX_I8) || (types == INSN_EAX_DX) || (types == INSN_AX_DX))
+		|| (types == INSN_R16_RM8) || (types == INSN_R32_RM8) || (types == INSN_R64_RM8) || (types == INSN_R32_RM16) || (types == INSN_R64_RM16) || (types == INSN_R64_RM32) ||
+		(types == INSN_RM_I8) || (types == INSN_AX_I8) || (types == INSN_EAX_I8) || (types == INSN_EAX_DX) || (types == INSN_AX_DX))
 	{
 		int defaultBits = x86_bits;
 		if (defaultBits == 64) defaultBits = 32;
@@ -984,10 +985,14 @@ void x86_Emit(const char *filename, int lineno, const char *mspec, x86_Operand *
 		{
 			objSectionAppend(sect, "\x48", 1);
 		}
+		else if (types == INSN_MM_I8)
+		{
+			//NOP
+		}
 		else if (strstr(mspec, "REX") == NULL)
 		{
 			uint8_t rex = 0;
-			if (opA->type == OPTYPE_REXGPR)
+			if (opA->type == OPTYPE_REXGPR || opA->type == OPTYPE_XMM)
 			{
 				rex = 0x40 | (opA->rexgpr.num >> 3);
 				if ((opA->rexgpr.opsz == 64) && ((flags & INSN_DEF64) == 0)) rex |= 0x08; // REX.W
@@ -1562,6 +1567,12 @@ int x86_OpTypeMatch(int types, x86_Operand *opA, x86_Operand *opB)
 		return ((typeA == OPTYPE_GPR) || (typeA == OPTYPE_REXGPR))
 				&& (opA->gpr.opsz == 64)
 				&& ((typeB == OPTYPE_IMM) || ((typeB == OPTYPE_OFFSET) && (opB->offset.opsz == 32)));
+	case INSN_XMM_I8:
+		return (typeA == OPTYPE_XMM) && (opA->gpr.opsz == 128)
+				&& ((typeB == OPTYPE_IMM) || ((typeB == OPTYPE_OFFSET) && (opB->offset.opsz == 8)));
+	case INSN_MM_I8:
+		return (typeA == OPTYPE_XMM) && (opA->gpr.opsz == 64)
+				&& ((typeB == OPTYPE_IMM) || ((typeB == OPTYPE_OFFSET) && (opB->offset.opsz == 8)));
 	case INSN_R8_RM8:
 		return isR_RM(opA, opB, 1);
 	case INSN_R_RM:

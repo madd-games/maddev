@@ -870,9 +870,9 @@ pmuludq xmm0, XMMWORD PTR test			; MODE32 MODE64
 pop WORD PTR test				; MODE16 MODE32 MODE64
 pop DWORD PTR test				; MODE16 MODE32
 pop QWORD PTR test				; MODE64
-pop ax PTR test					; MODE16 MODE32 MODE64
-pop eax PTR test				; MODE16 MODE32
-pop rax PTR test				; MODE64
+pop ax 						; MODE16 MODE32 MODE64
+pop eax 					; MODE16 MODE32
+pop rax 					; MODE64
 popa						; MODE16 MODE32
 popad						; MODE16 MODE32
 popcnt ax, WORD PTR test			; MODE16 MODE32 MODE64
@@ -881,3 +881,109 @@ popcnt rax, QWORD PTR test			; MODE64
 popf						; MODE16 MODE32 MODE64
 popfd						; MODE16 MODE32
 popdq						; MODE64
+por mm0, QWORD PTR test				; MODE32 MODE64
+por xmm0, XMMWORD PTR test			; MODE32 MODE64
+prefetch0 BYTE PTR test				; MODE16 MODE32 MODE64
+prefetch1 BYTE PTR test				; MODE16 MODE32 MODE64
+prefetch2 BYTE PTR test				; MODE16 MODE32 MODE64
+prefetchnta BYTE PTR test			; MODE16 MODE32 MODE64
+prefetchw BYTE PTR test				; MODE32 MODE64
+prefetchwt1 BYTE PTR test			; MODE32 MODE64
+psadbw mm0, QWORD PTR test			; MODE32 MODE64
+psadbw xmm0, XMMWORD PTR test			; MODE32 MODE64
+pshufb mm0, QWORD PTR test			; MODE32 MODE64
+pshufb xmm0, XMMWORD PTR test			; MODE32 MODE64
+pshufhw xmm0, XMMWORD PTR test			; MODE32 MODE64
+pshuflw xmm0, XMMWORD PTR test			; MODE32 MODE64
+; TODO: PSHUFW
+psignb mm0, QWORD PTR test			; MODE32 MODE64
+psignb xmm0, XMMWORD PTR test			; MODE32 MODE64
+psignw mm0, QWORD PTR test			; MODE32 MODE64
+psignw xmm0, XMMWORD PTR test			; MODE32 MODE64
+psignd mm0, QWORD PTR test			; MODE32 MODE64
+psignd xmm0, XMMWORD PTR test			; MODE32 MODE64
+pslldq xmm0, 0x56				; MODE32 MODE64
+psllw mm0, QWORD PTR test			; MODE32 MODE64
+psllw xmm0, XMMWORD PTR test			; MODE32 MODE64
+psllw mm0, 0x56					; MODE32 MODE64
+psllw xmm0, 0x56				; MODE32 MODE64
+pslld mm0, QWORD PTR test			; MODE32 MODE64
+pslld xmm0, XMMWORD PTR test			; MODE32 MODE64
+pslld mm0, 0x56					; MODE32 MODE64
+pslld xmm0, 0x56				; MODE32 MODE64
+psllq mm0, QWORD PTR test			; MODE32 MODE64
+psllq xmm0, XMMWORD PTR test			; MODE32 MODE64
+psllq mm0, 0x56					; MODE32 MODE64
+psllq xmm0, 0x56				; MODE32 MODE64
+psraw mm0, QWORD PTR test			; MODE32 MODE64
+psraw xmm0, XMMWORD PTR test			; MODE32 MODE64
+psraw mm0, 0x56					; MODE32 MODE64
+psraw xmm0, 0x56				; MODE32 MODE64
+psrad mm0, QWORD PTR test			; MODE32 MODE64
+psrad xmm0, XMMWORD PTR test			; MODE32 MODE64
+psrad mm0, 0x56					; MODE32 MODE64
+psrad xmm0, 0x56				; MODE32 MODE64
+psrldq xmm0, 0x56				; MODE32 MODE64
+; TODO: PSRAQ
+psrldq xmm0, 0x56				; MODE32 MODE64
+psrlw mm0, QWORD PTR test			; MODE32 MODE64
+psrlw xmm0, XMMWORD PTR test			; MODE32 MODE64
+psrlw mm0, 0x56					; MODE32 MODE64
+psrlw xmm0, 0x56				; MODE32 MODE64
+psrld mm0, QWORD PTR test			; MODE32 MODE64
+psrld xmm0, XMMWORD PTR test			; MODE32 MODE64
+psrld mm0, 0x56					; MODE32 MODE64
+psrld xmm0, 0x56				; MODE32 MODE64
+psrlq mm0, QWORD PTR test			; MODE32 MODE64
+psrlq xmm0, XMMWORD PTR test			; MODE32 MODE64
+psrlq mm0, 0x56					; MODE32 MODE64
+psllq xmm0, 0x56				; MODE32 MODE64
+psubb mm0, QWORD PTR test			; MODE32 MODE64
+psubb xmm0, XMMWORD PTR test			; MODE32 MODE64
+psubw mm0, QWORD PTR test			; MODE32 MODE64
+psubw xmm0, XMMWORD PTR test			; MODE32 MODE64
+psubd mm0, QWORD PTR test			; MODE32 MODE64
+psubd xmm0, XMMWORD PTR test			; MODE32 MODE64
+psubq mm0, QWORD PTR test			; MODE32 MODE64
+psubq xmm0, XMMWORD PTR test			; MODE32 MODE64
+psubsb mm0, QWORD PTR test			; MODE32 MODE64
+psubsb xmm0, XMMWORD PTR test			; MODE32 MODE64
+psubsw mm0, QWORD PTR test			; MODE32 MODE64
+psubsw xmm0, XMMWORD PTR test			; MODE32 MODE64
+psubusb mm0, QWORD PTR test			; MODE32 MODE64
+psubusb xmm0, XMMWORD PTR test			; MODE32 MODE64
+psubusw mm0, QWORD PTR test			; MODE32 MODE64
+psubusw xmm0, XMMWORD PTR test			; MODE32 MODE64
+ptest xmm0, XMMWORD PTR test			; MODE32 MODE64
+ptwrite DWORD PTR test				; MODE32 MODE64
+ptwrite QWORD PTR test				; MODE64
+punpckhbw mm0, QWORD PTR test			; MODE32 MODE64
+punpckhbw xmm0, XMMWORD PTR test		; MODE32 MODE64
+punpckhwd mm0, QWORD PTR test			; MODE32 MODE64
+punpckhwd xmm0, XMMWORD PTR test		; MODE32 MODE64
+punpckhdq mm0, QWORD PTR test			; MODE32 MODE64
+punpckhdq xmm0, XMMWORD PTR test		; MODE32 MODE64
+punpckhqdq xmm0, XMMWORD PTR test		; MODE32 MODE64
+punpcklbw mm0, QWORD PTR test			; MODE32 MODE64
+punpcklbw xmm0, XMMWORD PTR test		; MODE32 MODE64
+punpcklwd mm0, QWORD PTR test			; MODE32 MODE64
+punpcklwd xmm0, XMMWORD PTR test		; MODE32 MODE64
+punpckldq mm0, QWORD PTR test			; MODE32 MODE64
+punpckldq xmm0, XMMWORD PTR test		; MODE32 MODE64
+punpcklqdq xmm0, XMMWORD PTR test		; MODE32 MODE64
+push WORD PTR test				; MODE16 MODE32 MODE64
+push DWORD PTR test				; MODE16 MODE32
+push QWORD PTR test				; MODE64
+push ax						; MODE16 MODE32 MODE64
+push eax					; MODE16 MODE32
+push rax					; MODE64
+push 0x56					; MODE16 MODE32 MODE64
+push 0x567					; MODE16 MODE32 MODE64
+push 0x567					; MODE16 MODE32 MODE64
+pusha						; MODE16 MODE32 MODE64
+pushad						; MODE16 MODE32 MODE64
+pushf						; MODE16 MODE32 MODE64
+pushfd						; MODE16 MODE32 MODE64
+pushfq						; MODE16 MODE32 MODE64
+pxor mm0, QWORD PTR test			; MODE32 MODE64
+pxor xmm0, XMMWORD PTR test			; MODE32 MODE64

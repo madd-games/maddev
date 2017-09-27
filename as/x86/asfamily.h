@@ -286,6 +286,16 @@ enum
 	INSN_RM_XMM_IMM8,
 	
 	/**
+	 * XMM register + imm8
+	 */
+	INSN_XMM_I8,
+	
+	/**
+	 * XMM register + imm8
+	 */
+	INSN_MM_I8,
+	
+	/**
 	 * XMM + XMM + r/m + XMM
 	 */
 	INSN_XMM4,
