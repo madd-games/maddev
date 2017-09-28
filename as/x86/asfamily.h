@@ -266,6 +266,16 @@ enum
 	INSN_AX,
 	
 	/**
+	 * 8-bit r/m + CL register
+	 */
+	INSN_RM8_CL,
+	
+	/**
+	 *non-8-bit r/m + CL register
+	 */
+	INSN_RM_CL,
+	
+	/**
 	 * xmm register (or 2 of them) + r/m
 	 */
 	INSN_XMM_RM,
