@@ -458,6 +458,16 @@ enum
 	INSN_R_RM_I32,
 	
 	/**
+	 * r/m + register (matching size to r/m) + 8-bit immediate value
+	 */
+	INSN_RM_R_I8,
+	
+	/**
+	 * r/m + register (matching size to r/m) + CL register
+	 */
+	INSN_RM_R_CL,
+	
+	/**
 	 * AX (various sizes) and DX.
 	 */
 	INSN_AL_DX,
