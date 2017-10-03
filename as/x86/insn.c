@@ -1150,7 +1150,10 @@ InsnSpec insnList[] = {
 	{"syscall",		INSN_NONE,		"0F 05",				INSN_64},
 	{"sysenter",		INSN_NONE,		"0F 34",				INSN_ALL_MODES},
 	{"sysexit",		INSN_NONE,		"0F 35",				INSN_ALL_MODES},
-	{"sysret",		INSN_NONE,		"0F 07",				INSN_64},
+	{"sysret",		INSN_NONE,		"0F 07",				INSN_LEG_ONLY},
+	{"sysret",		INSN_NONE,		"48 0F 07",				INSN_64},
+	{"sysret32",		INSN_NONE,		"0F 07",				INSN_ALL_MODES},
+	{"sysret64",		INSN_NONE,		"48 0F 07",				INSN_ALL_MODES},
 	// LIST TERMINATOR
 	{NULL, 0, NULL, 0}
 };

@@ -1222,4 +1222,6 @@ swapgs						; MODE64
 syscall						; MODE64
 sysenter					; MODE16 MODE32 MODE64
 sysexit						; MODE16 MODE32 MODE64
-sysret						; MODE64
+sysret						; MODE16 MODE32 MODE64
+sysret32					; MODE16 MODE32 MODE64
+sysret64					; MODE16 MODE32 MODE64
