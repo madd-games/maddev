@@ -764,8 +764,7 @@ paddusb mm0, QWORD PTR test			; MODE32 MODE64
 paddusb xmm0, XMMWORD PTR test			; MODE32 MODE64
 paddusw mm0, QWORD PTR test			; MODE32 MODE64
 paddusw xmm0, XMMWORD PTR test			; MODE32 MODE64
-palingr mm0, QWORD PTR test			; MODE32 MODE64
-palingr xmm0, XMMWORD PTR test			; MODE32 MODE64
+;TODO palingr
 pand mm0, QWORD PTR test			; MODE32 MODE64
 pand xmm0, XMMWORD PTR test			; MODE32 MODE64
 pandn mm0, QWORD PTR test			; MODE32 MODE64
@@ -840,8 +839,8 @@ pminub xmm0, XMMWORD PTR test			; MODE32 MODE64
 pminuw xmm0, XMMWORD PTR test			; MODE32 MODE64
 pminud xmm0, XMMWORD PTR test			; MODE32 MODE64
 ; TODO: PMINUQ
-pmovmskb eax, QWORD PTR test			; MODE32 MODE64
-pmovmskb rax, XMMWORD PTR test			; MODE32 MODE64
+pmovmskb eax, mm1				; MODE32 MODE64
+pmovmskb rax, xmm13				; MODE32 MODE64
 pmovsxbw xmm0, XMMWORD PTR test			; MODE32 MODE64
 pmovsxbd xmm0, XMMWORD PTR test			; MODE32 MODE64
 pmovsxbq xmm0, XMMWORD PTR test			; MODE32 MODE64
@@ -861,7 +860,7 @@ pmulhuw mm0, QWORD PTR test			; MODE32 MODE64
 pmulhuw xmm0, XMMWORD PTR test			; MODE32 MODE64
 pmulhw mm0, QWORD PTR test			; MODE32 MODE64
 pmulhw xmm0, XMMWORD PTR test			; MODE32 MODE64
-pmuld xmm0, XMMWORD PTR test			; MODE32 MODE64
+pmulld xmm0, XMMWORD PTR test			; MODE32 MODE64
 ; TODO: PMULLQ
 pmulw mm0, QWORD PTR test			; MODE32 MODE64
 pmulw xmm0, XMMWORD PTR test			; MODE32 MODE64
@@ -880,7 +879,7 @@ popcnt eax, DWORD PTR test			; MODE16 MODE32 MODE64
 popcnt rax, QWORD PTR test			; MODE64
 popf						; MODE16 MODE32 MODE64
 popfd						; MODE16 MODE32
-popdq						; MODE64
+popfq						; MODE64
 por mm0, QWORD PTR test				; MODE32 MODE64
 por xmm0, XMMWORD PTR test			; MODE32 MODE64
 prefetch0 BYTE PTR test				; MODE16 MODE32 MODE64
@@ -893,8 +892,9 @@ psadbw mm0, QWORD PTR test			; MODE32 MODE64
 psadbw xmm0, XMMWORD PTR test			; MODE32 MODE64
 pshufb mm0, QWORD PTR test			; MODE32 MODE64
 pshufb xmm0, XMMWORD PTR test			; MODE32 MODE64
-pshufhw xmm0, XMMWORD PTR test			; MODE32 MODE64
-pshuflw xmm0, XMMWORD PTR test			; MODE32 MODE64
+; TODO: PSHUFD
+; TODO: PSHUFHW
+; TODO: PSHUFLW
 ; TODO: PSHUFW
 psignb mm0, QWORD PTR test			; MODE32 MODE64
 psignb xmm0, XMMWORD PTR test			; MODE32 MODE64
@@ -979,12 +979,11 @@ push eax					; MODE16 MODE32
 push rax					; MODE64
 push 0x56					; MODE16 MODE32 MODE64
 push 0x567					; MODE16 MODE32 MODE64
-push 0x567					; MODE16 MODE32 MODE64
-pusha						; MODE16 MODE32 MODE64
-pushad						; MODE16 MODE32 MODE64
+pusha						; MODE16 MODE32
+pushad						; MODE16 MODE32
 pushf						; MODE16 MODE32 MODE64
-pushfd						; MODE16 MODE32 MODE64
-pushfq						; MODE16 MODE32 MODE64
+pushfd						; MODE16 MODE32
+pushfq						; MODE64
 pxor mm0, QWORD PTR test			; MODE32 MODE64
 pxor xmm0, XMMWORD PTR test			; MODE32 MODE64
 rcl BYTE PTR test, 1				; MODE16 MODE32 MODE64
@@ -1062,7 +1061,7 @@ ret 0x567					; MODE16 MODE32 MODE64
 rsm						; MODE16 MODE32 MODE64
 rsqrtps xmm0, XMMWORD PTR test			; MODE32 MODE64
 rsqrtss xmm0, XMMWORD PTR test			; MODE32 MODE64
-sahf						; MODE16 MODE32 MODE64
+sahf						; MODE16 MODE32
 sal BYTE PTR test, 1				; MODE16 MODE32 MODE64
 sal BYTE PTR test, cl				; MODE16 MODE32 MODE64
 sal BYTE PTR test, 0x56				; MODE16 MODE32 MODE64

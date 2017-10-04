@@ -1698,9 +1698,11 @@ int x86_OpTypeMatch(int types, x86_Operand *opA, x86_Operand *opB)
 	case INSN_AX:
 		return (typeA == OPTYPE_GPR) && (opA->gpr.num == 0) && (opA->gpr.opsz == 16) && (typeB == OPTYPE_NONE);
 	case INSN_RM8_CL:
-		return (typeA == OPTYPE_MEMREF) && (opA->memref.opsz == 8) && (typeB == OPTYPE_GPR) && (opB->gpr.num == 1) && (opA->gpr.opsz == 8);
+		return ((typeA == OPTYPE_MEMREF) || (typeA == OPTYPE_GPR) || (typeA == OPTYPE_REXGPR)) && ((opA->memref.opsz == 8) || (opA->gpr.opsz == 8)) && (typeB == OPTYPE_GPR) && (opB->gpr.num == 1) && (opB->gpr.opsz == 8);
 	case INSN_RM_CL:
-		return (typeA == OPTYPE_MEMREF) && ((opA->memref.opsz == 16) || (opA->memref.opsz == 32) || (opA->memref.opsz == 64)) && (typeB == OPTYPE_GPR) && (opB->gpr.num == 1) && (opA->gpr.opsz == 8);
+		return ((typeA == OPTYPE_MEMREF) || (typeA == OPTYPE_GPR) || (typeA == OPTYPE_REXGPR)) && ((opA->memref.opsz == 16) || (opA->memref.opsz == 32) || 
+		(opA->memref.opsz == 64) || (opA->gpr.opsz == 16) || (opA->gpr.opsz == 32) || 
+		(opA->gpr.opsz == 64)) && (typeB == OPTYPE_GPR) && (opB->gpr.num == 1) && (opB->gpr.opsz == 8);
 	case INSN_I8_AL:
 		return (typeB == OPTYPE_GPR) && (opB->gpr.num == 0) && (opB->gpr.opsz == 8) && ((typeA == OPTYPE_OFFSET && (opA->offset.opsz == opB->gpr.opsz)) || (typeA == OPTYPE_IMM));
 	case INSN_I8_AX:

@@ -834,6 +834,7 @@ InsnSpec insnList[] = {
 	{"pminub",		INSN_MM_RM,		"0F DA /r.0",				INSN_32 | INSN_64},
 	{"*pminub",		INSN_XMM_RM,		"66 0F DA /r.0",			INSN_32 | INSN_64},
 	{"*pminuw",		INSN_XMM_RM,		"66 0F 38 3A /r.0",			INSN_32 | INSN_64},
+	{"*pminud",		INSN_XMM_RM,		"66 0F 38 3B /r.0",			INSN_32 | INSN_64},
 	// TODO: PMINUQ
 	{"pmovmskb",		INSN_GPR_MM,		"0F D7 /r.0",				INSN_32 | INSN_64},
 	{"*pmovmskb",		INSN_GPR_XMM,		"0F D7 /r.0",				INSN_32 | INSN_64},
