@@ -1537,13 +1537,13 @@ int x86_OpTypeMatch(int types, x86_Operand *opA, x86_Operand *opB)
 	case INSN_R:
 		return ((typeA == OPTYPE_GPR) || (typeA == OPTYPE_REXGPR)) && (typeB == OPTYPE_NONE);
 	case INSN_IB:
-		return ((typeA == OPTYPE_IMM) || ((typeA == OPTYPE_OFFSET) && (opA->offset.opsz == 8)))
+		return ((typeA == OPTYPE_IMM && (opA->imm.value & ~0xFF) == 0) || ((typeA == OPTYPE_OFFSET) && (opA->offset.opsz == 8)))
 				&& (typeB == OPTYPE_NONE);
 	case INSN_IW:
-		return ((typeA == OPTYPE_IMM) || ((typeA == OPTYPE_OFFSET) && (opA->offset.opsz == 16)))
+		return ((typeA == OPTYPE_IMM && (opA->imm.value & ~0xFFFF) == 0) || ((typeA == OPTYPE_OFFSET) && (opA->offset.opsz == 16)))
 				&& (typeB == OPTYPE_NONE);
 	case INSN_ID:
-		return ((typeA == OPTYPE_IMM) || ((typeA == OPTYPE_OFFSET) && (opA->offset.opsz == 32)))
+		return ((typeA == OPTYPE_IMM && (opA->imm.value & ~0xFFFFFFFF) == 0) || ((typeA == OPTYPE_OFFSET) && (opA->offset.opsz == 32)))
 				&& (typeB == OPTYPE_NONE);
 	case INSN_IQ:
 		return ((typeA == OPTYPE_IMM) || ((typeA == OPTYPE_OFFSET) && (opA->offset.opsz == 64)))
