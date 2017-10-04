@@ -1515,7 +1515,7 @@ static int isRM_I8(x86_Operand *opA, x86_Operand *opB)
 	switch (opB->type)
 	{
 	case OPTYPE_IMM:
-		return 1;
+		return (opB->imm.value & ~0xFF) == 0;
 	case OPTYPE_OFFSET:
 		return opB->offset.opsz == 8;
 		break;
