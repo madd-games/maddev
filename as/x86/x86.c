@@ -914,9 +914,10 @@ void x86_Emit(const char *filename, int lineno, const char *mspec, x86_Operand *
 				uint8_t rex = 0x48;	// REX.W
 				objSectionAppend(sect, &rex, 1);
 			}
-			else if (opA->memref.opsz != 64 && (flags & INSN_DEF64))
+			else if (flags & INSN_DEF64)
 			{
-				asDiag(filename, lineno, ML_ERROR, "this instruction can only accept a QWORD PTR in 64-bit mode\n");
+				uint8_t rex = 0x40;	// REX (no W)
+				objSectionAppend(sect, &rex, 1);
 			};
 		}
 		else if (types == INSN_CR_R)
