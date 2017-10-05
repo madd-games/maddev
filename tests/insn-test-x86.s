@@ -1187,7 +1187,7 @@ sqrtss xmm0, XMMWORD PTR test			; MODE32 MODE64
 stac						; MODE32 MODE64
 stc						; MODE16 MODE32 MODE64
 std						; MODE16 MODE32 MODE64
-std						; MODE16 MODE32 MODE64
+sti						; MODE16 MODE32 MODE64
 stmxcsr PTR test				; MODE32 MODE64
 stosb						; MODE16 MODE32 MODE64
 stosw						; MODE16 MODE32 MODE64
@@ -1196,8 +1196,8 @@ stosq						; MODE64
 str PTR test					; MODE16 MODE32 MODE64
 sub al, 0x56					; MODE16 MODE32 MODE64
 sub ax, 0x567					; MODE16 MODE32 MODE64
-sub rax, 0x567					; MODE16 MODE32 MODE64
-sub eax, 0x567					; MODE64
+sub eax, 0x567					; MODE16 MODE32 MODE64
+sub rax, 0x567					; MODE64
 sub BYTE PTR test, 0x56				; MODE16 MODE32 MODE64
 sub WORD PTR test, 0x567			; MODE16 MODE32 MODE64
 sub DWORD PTR test, 0x567			; MODE16 MODE32 MODE64
