@@ -1226,3 +1226,34 @@ sysexit64					; MODE16 MODE32 MODE64
 sysret						; MODE16 MODE32 MODE64
 sysret32					; MODE16 MODE32 MODE64
 sysret64					; MODE16 MODE32 MODE64
+test al, 0x56					; MODE16 MODE32 MODE64
+test ax, 0x567					; MODE16 MODE32 MODE64
+test eax, 0x567					; MODE16 MODE32 MODE64
+test rax, 0x567					; MODE64
+test BYTE PTR test, 0x56			; MODE16 MODE32 MODE64
+test WORD PTR test, 0x567			; MODE16 MODE32 MODE64
+test DWORD PTR test, 0x567			; MODE16 MODE32 MODE64
+test QWORD PTR test, 0x567			; MODE64
+test BYTE PTR test, al				; MODE16 MODE32 MODE64
+test WORd PTR test, ax				; MODE16 MODE32 MODE64
+test DWORD PTR test, eax			; MODE16 MODE32 MODE64
+test QWORD PTR test, rax			; MODE64
+tzcnt ax, WORD PTR test				; MODE32 MODE64
+tzcnt eax, WORD PTR test			; MODE32 MODE64
+tzcnt rax, WORD PTR test			; MODE64
+ucomisd xmm0, XMMWORD PTR test			; MODE32 MODE64
+ucomiss xmm0, XMMWORD PTR test			; MODE32 MODE64
+ud2						; MODE16 MODE32 MODE64
+unpckhpd xmm0, XMMWORD PTR test			; MODE32 MODE64
+unpckhps xmm0, XMMWORD PTR test			; MODE32 MODE64
+unpcklpd xmm0, XMMWORD PTR test			; MODE32 MODE64
+unpcklps xmm0, XMMWORD PTR test			; MODE32 MODE64
+wait						; MODE16 MODE32 MODE64
+fwait						; MODE16 MODE32 MODE64
+wbinvd						; MODE16 MODE32 MODE64
+wrfsbase DWORD PTR test				; MODE16 MODE32 MODE64
+wrfsbase QWORD PTR test				; MODE16 MODE32 MODE64
+wrgsbase DWORD PTR test				; MODE16 MODE32 MODE64
+wrgsbase QWORD PTR test				; MODE16 MODE32 MODE64
+wrmsr						; MODE16 MODE32 MODE64
+wrpkru						; MODE16 MODE32 MODE64
