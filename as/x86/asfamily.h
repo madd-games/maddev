@@ -248,6 +248,20 @@ enum
 	INSN_EAX_I,
 	
 	/**
+	 * specific register and register of a matching size.
+	 * NOTE: INSN_EAX_R also accepts RAX
+	 */
+	INSN_AX_R,
+	INSN_EAX_R,
+	
+	/**
+	 * register and a specific register of matching size
+	 * NOTE: INSN_R_EAX also accepts RAX
+	 */
+	INSN_R_AX,
+	INSN_R_EAX,
+	
+	/**
 	 * specific register + imm8
 	 */
 	INSN_AX_I8,

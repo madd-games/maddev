@@ -1257,3 +1257,64 @@ wrgsbase DWORD PTR test				; MODE16 MODE32 MODE64
 wrgsbase QWORD PTR test				; MODE16 MODE32 MODE64
 wrmsr						; MODE16 MODE32 MODE64
 wrpkru						; MODE16 MODE32 MODE64
+xacquire					; MODE32 MODE64
+xrelease					; MODE32 MODE64
+xabort 0x56					; MODE32 MODE64
+xadd BYTE PTR test, al				; MODE16 MODE32 MODE64
+xadd WORD PTR test, ax				; MODE16 MODE32 MODE64
+xadd DWORD PTR test, eax			; MODE16 MODE32 MODE64
+xadd QWORD PTR test, rax			; MODE64
+xbegin WORD OFFSET test				; MODE32 MODE64
+xbegin DWORD OFFSET test			; MODE32 MODE64
+xchg ax. bx					; MODE16 MODE32 MODE64
+xchg bx. ax					; MODE16 MODE32 MODE64
+xchg eax. ebx					; MODE16 MODE32 MODE64
+xchg ebx. eax					; MODE16 MODE32 MODE64
+xchg rax. rbx					; MODE64
+xchg rbx. rax					; MODE64
+xchg BYTE PTR test, al				; MODE16 MODE32 MODE64
+xchg al, BYTE PTR test				; MODE16 MODE32 MODE64
+xchg WORD PTR test, ax				; MODE16 MODE32 MODE64
+xchg ax, WORD PTR test				; MODE16 MODE32 MODE64
+xchg DWORD PTR test, eax			; MODE16 MODE32 MODE64
+xchg QWORD PTR test, rax			; MODE64
+xchg eax, DWORD PTR test			; MODE16 MODE32 MODE64
+xchg rax, QWORD PTR test			; MODE64
+xend						; MODE32 MODE64
+xgetbv						; MODE16 MODE32 MODE64
+xlatb						; MODE16 MODE32 MODE64
+xor al, 0x56					; MODE16 MODE32 MODE64
+xor ax, 0x567					; MODE16 MODE32 MODE64
+xor eax, 0x567					; MODE16 MODE32 MODE64
+xor rax, 0x567					; MODE64
+xor BYTE PTR test, 0x56				; MODE16 MODE32 MODE64
+xor WORD PTR test, 0x567			; MODE16 MODE32 MODE64
+xor DWORD PTR test, 0x567			; MODE16 MODE32 MODE64
+xor QWORD PTR test, 0x567			; MODE64
+xor WORD PTR test, 0x56				; MODE16 MODE32 MODE64
+xor DWORD PTR test, 0x56			; MODE16 MODE32 MODE64
+xor QWORD PTR test, 0x56			; MODE64
+xor BYTE PTR test, al				; MODE16 MODE32 MODE64
+xor WORD PTR test, ax				; MODE16 MODE32 MODE64
+xor DWORD PTR test, eax				; MODE16 MODE32 MODE64
+xor QWORD PTR test, rax				; MODE64
+xor al, BYTE PTR test				; MODE16 MODE32 MODE64
+xor ax, WORD PTR test				; MODE16 MODE32 MODE64
+xor eax, DWORD PTR test				; MODE16 MODE32 MODE64
+xor rax, QWORD PTR test				; MODE64
+xorpd xmm1, XMMWORD PTR test			; MODE32 MODE64
+xorps xmm1, XMMWORD PTR test			; MODE32 MODE64
+xsetbv						; MODE16 MODE32 MODE64
+xtest						; MODE16 MODE32 MODE64
+xrstor DWORD PTR test				; MODE16 MODE32 MODE64
+xrstor QWORD PTR test				; MODE64
+xrstors DWORD PTR test				; MODE16 MODE32 MODE64
+xrstors QWORD PTR test				; MODE64
+xsave DWORD PTR test				; MODE16 MODE32 MODE64
+xsave QWORD PTR test				; MODE64
+xsavec DWORD PTR test				; MODE16 MODE32 MODE64
+xsavec QWORD PTR test				; MODE64
+xsaveopt DWORD PTR test				; MODE16 MODE32 MODE64
+xsaveopt QWORD PTR test				; MODE64
+xsaves DWORD PTR test				; MODE16 MODE32 MODE64
+xsaves QWORD PTR test				; MODE64

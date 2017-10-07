@@ -815,6 +815,20 @@ void x86_Emit(const char *filename, int lineno, const char *mspec, x86_Operand *
 		opA = opB;
 		opB = temp;
 		types = INSN_EAX_DX;
+	}
+	else if (types == INSN_AX_R)
+	{
+		x86_Operand *temp = opA;
+		opA = opB;
+		opB = temp;
+		types = INSN_R_AX;
+	}
+	else if (types == INSN_EAX_R)
+	{
+		x86_Operand *temp = opA;
+		opA = opB;
+		opB = temp;
+		types = INSN_R_EAX;
 	};
 
 	// mandatory prefix (if any) must come before REX and 66 etc
@@ -850,7 +864,8 @@ void x86_Emit(const char *filename, int lineno, const char *mspec, x86_Operand *
 	// emit the size override prefix is necessary
 	if ((types == INSN_R16_I16) || (types == INSN_R32_I32) || (types == INSN_R8_RM8) || (types == INSN_R_RM) || (types == INSN_AX_I) || (types == INSN_EAX_I) || (types == INSN_A_OFFSET)
 		|| (types == INSN_R16_RM8) || (types == INSN_R32_RM8) || (types == INSN_R64_RM8) || (types == INSN_R32_RM16) || (types == INSN_R64_RM16) || (types == INSN_R64_RM32) ||
-		(types == INSN_RM_I8) || (types == INSN_AX_I8) || (types == INSN_EAX_I8) || (types == INSN_EAX_DX) || (types == INSN_AX_DX))
+		(types == INSN_RM_I8) || (types == INSN_AX_I8) || (types == INSN_EAX_I8) || (types == INSN_EAX_DX) || (types == INSN_AX_DX) || (types == INSN_AX_R) || (types == INSN_R_AX)
+		 || (types == INSN_EAX_R) || (types == INSN_R_EAX))
 	{
 		int defaultBits = x86_bits;
 		if (defaultBits == 64) defaultBits = 32;
@@ -938,7 +953,8 @@ void x86_Emit(const char *filename, int lineno, const char *mspec, x86_Operand *
 		else if (types == INSN_R_RM || types == INSN_XMM_RM || types == INSN_MM_XMMRM || types == INSN_R_CR || 
 			types == INSN_GPRM32_MM || types == INSN_GPRM64_MM || types == INSN_MM_GPRM32 || types == INSN_MM_GPRM64 || types == INSN_GPRM32_XMM || types == INSN_GPRM64_XMM || 
 			types == INSN_XMM_GPRM32 || types == INSN_XMM_GPRM64 || types == INSN_GPR_XMM || types == INSN_XMM_MM || types == INSN_R16_RM8 || types == INSN_R32_RM8 || types == INSN_R64_RM8
-			|| types == INSN_R32_RM16 || types == INSN_R64_RM16 || types == INSN_R64_RM32 || types == INSN_GPR_MM || types == INSN_RM8_CL || types == INSN_RM_CL)
+			|| types == INSN_R32_RM16 || types == INSN_R64_RM16 || types == INSN_R64_RM32 || types == INSN_GPR_MM || types == INSN_RM8_CL || types == INSN_RM_CL || types == INSN_EAX_R 
+			|| types == INSN_R_EAX)
 		{
 			uint8_t rex = 0x40;
 			if (opA->gpr.opsz == 64 && (types != INSN_MM_XMMRM))
@@ -1731,6 +1747,14 @@ int x86_OpTypeMatch(int types, x86_Operand *opA, x86_Operand *opB)
 		return (typeB == OPTYPE_GPR) && (opB->gpr.num == 0) && (opB->gpr.opsz == 16) && (typeA == OPTYPE_GPR) && (opA->gpr.num == 2) && (opA->gpr.opsz == 16);
 	case INSN_DX_EAX:
 		return (typeB == OPTYPE_GPR) && (opB->gpr.num == 0) && (opB->gpr.opsz == 32) && (typeA == OPTYPE_GPR) && (opA->gpr.num == 2) && (opA->gpr.opsz == 16);
+	case INSN_AX_R:
+		return (typeA == OPTYPE_GPR) && (opA->gpr.num == 0) && (opA->gpr.opsz == 16) && ((typeB == OPTYPE_GPR || typeB == OPTYPE_REXGPR) && (opB->gpr.opsz == opA->gpr.opsz));
+	case INSN_R_AX:
+		return (typeB == OPTYPE_GPR) && (opB->gpr.num == 0) && (opB->gpr.opsz == 16) && ((typeA == OPTYPE_GPR || typeA == OPTYPE_REXGPR) && (opA->gpr.opsz == opA->gpr.opsz));
+	case INSN_EAX_R:
+		return (typeA == OPTYPE_GPR) && (opA->gpr.num == 0) && (opA->gpr.opsz == 32) && ((typeB == OPTYPE_GPR || typeB == OPTYPE_REXGPR) && (opB->gpr.opsz == opA->gpr.opsz));
+	case INSN_R_EAX:
+		return (typeB == OPTYPE_GPR) && (opB->gpr.num == 0) && (opB->gpr.opsz == 32) && ((typeA == OPTYPE_GPR || typeA == OPTYPE_REXGPR) && (opA->gpr.opsz == opA->gpr.opsz));
 	case INSN_INT3:
 		return (typeB == OPTYPE_NONE) && (typeA == OPTYPE_IMM) && (opA->imm.value == 3);
 	case INSN_MM_XMMRM:
