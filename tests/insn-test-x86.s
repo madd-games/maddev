@@ -1235,12 +1235,12 @@ test WORD PTR test, 0x567			; MODE16 MODE32 MODE64
 test DWORD PTR test, 0x567			; MODE16 MODE32 MODE64
 test QWORD PTR test, 0x567			; MODE64
 test BYTE PTR test, al				; MODE16 MODE32 MODE64
-test WORd PTR test, ax				; MODE16 MODE32 MODE64
+test WORD PTR test, ax				; MODE16 MODE32 MODE64
 test DWORD PTR test, eax			; MODE16 MODE32 MODE64
 test QWORD PTR test, rax			; MODE64
 tzcnt ax, WORD PTR test				; MODE32 MODE64
-tzcnt eax, WORD PTR test			; MODE32 MODE64
-tzcnt rax, WORD PTR test			; MODE64
+tzcnt eax, DWORD PTR test			; MODE32 MODE64
+tzcnt rax, QWORD PTR test			; MODE64
 ucomisd xmm0, XMMWORD PTR test			; MODE32 MODE64
 ucomiss xmm0, XMMWORD PTR test			; MODE32 MODE64
 ud2						; MODE16 MODE32 MODE64
@@ -1266,12 +1266,12 @@ xadd DWORD PTR test, eax			; MODE16 MODE32 MODE64
 xadd QWORD PTR test, rax			; MODE64
 xbegin WORD OFFSET test				; MODE32 MODE64
 xbegin DWORD OFFSET test			; MODE32 MODE64
-xchg ax. bx					; MODE16 MODE32 MODE64
-xchg bx. ax					; MODE16 MODE32 MODE64
-xchg eax. ebx					; MODE16 MODE32 MODE64
-xchg ebx. eax					; MODE16 MODE32 MODE64
-xchg rax. rbx					; MODE64
-xchg rbx. rax					; MODE64
+xchg ax, bx					; MODE16 MODE32 MODE64
+xchg bx, ax					; MODE16 MODE32 MODE64
+xchg eax, ebx					; MODE16 MODE32 MODE64
+xchg ebx, eax					; MODE16 MODE32 MODE64
+xchg rax, rbx					; MODE64
+xchg rbx, rax					; MODE64
 xchg BYTE PTR test, al				; MODE16 MODE32 MODE64
 xchg al, BYTE PTR test				; MODE16 MODE32 MODE64
 xchg WORD PTR test, ax				; MODE16 MODE32 MODE64
