@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+	Maddev Language Specifications
+
+	Copyright (c) 2014-2017, Madd Games.
+	All rights reserved.
+	
+	Redistribution and use in source and binary forms, with or without
+	modification, are permitted provided that the following conditions are met:
+	
+	* Redistributions of source code must retain the above copyright notice, this
+	  list of conditions and the following disclaimer.
+	
+	* Redistributions in binary form must reproduce the above copyright notice,
+	  this list of conditions and the following disclaimer in the documentation
+	  and/or other materials provided with the distribution.
+	
+	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+	AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+	IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+	DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+	FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+	DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+	SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+	CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+	OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+	OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+	
+	
+	The gtksrouceview language definition for maddev grammar (BNF) files.
+
+-->
+<language id="maddevbnf" _name="Maddev BNF" version="2.0" _section="Sources">
+	<metadata>
+		<property name="mimetypes">text/x-maddev-bnf</property>
+		<property name="globs">*.bnf</property>
+	</metadata>
+
+	<styles>
+		<style id="escaped-character" _name="Escaped Character" map-to="def:special-char"/>
+		<style id="string" _name="String" map-to="def:string"/>
+		<style id="char" _name="Character" map-to="def:character"/>
+		<style id="keyword" _name="Keyword" map-to="def:keyword"/>
+		<style id="const" _name="Constant" map-to="def:builtin"/>
+		<style id="number" _name="Number" map-to="def:decimal"/>
+		<style id="reserved" _name="Future Reserved Keywords" map-to="def:reserved"/>
+		<style id="type" _name="Data Type" map-to="def:type"/>
+		<style id="comment" _name="Comment" map-to="def:comment"/>
+	</styles>
+
+	<definitions>
+		<context id="keyword" style-ref="keyword">
+			<keyword>include</keyword>
+			<keyword>tokenizer</keyword>
+			<keyword>terminal</keyword>
+		</context>
+
+		<context id="comment" style-ref="comment">
+			<start>//</start>
+			<end>$</end>
+		</context>
+		
+		<context id="blockcomment" style-ref="comment">
+			<start>\/\*</start>
+			<end>\*\/</end>
+		</context>
+		
+		<context id="symbol" style-ref="const">
+			<start>&lt;</start>
+			<end>&gt;</end>
+		</context>
+		
+		<context id="string" style-ref="string">
+			<start>'</start>
+			<end>'</end>
+		</context>
+		
+		<context id="maddevbnf" class="no-spell-check">
+			<include>
+				<context ref="keyword"/>
+				<context ref="comment"/>
+				<context ref="blockcomment"/>
+				<context ref="symbol"/>
+				<context ref="string"/>
+			</include>
+		</context>
+
+	</definitions>
+</language>
