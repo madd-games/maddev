@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Madd Macro-Compiler</title>
+		<link rel="stylesheet" type="text/css" href="style.css"/>
+	</head>
+	
+	<body>
+		<div class="banner">Madd Macro-Compiler</div>
+		<hr/>
+		
+		<h1>1. Introduction and Principle of Operation</h1>
+		<p>
+			The macro-compiler takes as input the <i>macro-language</i> - the architecture-independent output of a <i>source language compiler</i> (e.g. the C compiler), and translates it into architecture-specific <i>assembly language</i>. Hence, it acts as the intermediate language compiler for the Madd Development Tools.
+		</p>
+		
+		<p>
+			A macro-langauge file contains <i>macro-code</i>, which is a tree structure representing operations to be performed. The tree is made up of <i>nodes</i>, each representing some operation or a constant. A node can be evaluated to give some value. The type of a node is called a <i>macro</i>. For example, there may be a node representing addition, and it would have 2 branches - each representing an input to the addition. In the macro-language, such a tree could be written as:
+		</p>
+		
+<pre>
+(add 2 2)
+</pre>
+		
+		<p>
+			For a more complex example, here's addition of "2" to a local variable:
+		</p>
+		
+<pre>
+(add (localvar "hello") 2)
+</pre>
+		
+		<p>
+			As such, each node is either a branch (sub-tree), a string or a numeric constant.
+		</p>
+		
+		<h2>Storage Classes and Locations</h2>
+		<p>
+			Values are modelled as being stored in <i>locations</i>. These locations can be the stack, CPU registers, etc. The type of a location is called its <i>storage class</i>, and those are mostly architecture-specific. The following storage classes are architecture-independent:
+		</p>
+		
+		<table border="1">
+		<tr><th>Storage Class Name</th><th>Description</th></tr>
+		<tr><td><code>const-<i>type</i></code></td><td>A constant value, not explicitly stored anywhere, of type <i>type</i>.</td></tr>
+		</table>
+		
+		<p>
+		Values also have types. The types <code>u8</code>, <code>u16</code>, <code>u32</code> and <code>u64</code> are unsigned integers of values sizes; <code>i*</code> are the same but signed, and <code>f*</code> are floats (only 32-bit and 64-bit floats are guaranteed to be supported). There may be additional types defined by extensions, or architecture-specific.
+		</p>
+		
+		<h2>The Fundamental Macro: <code>asm</code></h2>
+		<p>
+			The <code>asm</code> macro is special: it defines assembly code to be outputted. Its first operand is the <i>assembly template</i> - a string containing assembly, with placeholders of the form <code>%0</code>, <code>%1</code>, etc. The rest of the arguments are as follows:
+		</p>
+		
+		<ul>
+			<li>A list of <code>constraint_list</code> nodes. Each one has as its argument a set of strings, naming an allowed combination of storage classes (so the number of these strings must also equal the number of placeholders).</li>
+			<li>The first non-<code>constraint_list</code> node starts a list of nodes that evaluates to the values to put in each placeholder, or an <code>output</code> node. The output node either takes as an argument a string naming a local variable to output to, or no arguments, in which case the output is the return value iof the <code>asm</code> node itself. Furthermore, if the same same location must be used as both an input and an output, a <code>filler_list</code> node may be used as one of the arguments for a placeholder; this node takes as arguments the list of inputs/outputs to be used in the same placeholder.</li>
+		</ul>
+		
+		<p>
+			If the macro-compiler can choose a set of constrains such that all values used as inputs and output can be en tered without moving them, it does so. Otherwise, it simply chooses the combination that requires the least moves. The architecture backend therefore must also generate code for moving from one storage location to another.
+		</p>
+		
+		<p>
+		Here is an example of how 64-bit unsigned addition could be handled on <i>x86_64</i>:
+		</p>
+		
+<pre>
+(asm
+	/* the assembly code to generate; 2 placeholders */
+	"add %0, %1"
+	
+	/* one possible set of operands is a 64-bit GPR and another 64-bit GPR */
+	(constraint_list "gpr-u64" "gpr-u64")
+	
+	/* another possible set of operands is a 64-bit GPR and a 32-bit constant */
+	(constraint_list "gpr-u64" "const-i32")
+	
+	/* the first placeholder is both the first operand and the result of the operation */
+	(filler_list
+		(localvar "test")
+		(output)
+	)
+	
+	/* the second placeholder is simply the second operand */
+	(i32 5)
+)
+</pre>
+
+		<h2>The Architecture Backend</h2>
+		<p>
+			The backend for a paritcular architecture defines the following things:
+		</p>
+	
+		<ul>
+			<li>How to expand each architecture-independent macro into a series of <code>asm</code> nodes (and a bunch of other nodes explained later).</li>
+			<li>The storage classes available on the architecture, as well as allocating/deallocating locations within a context.</li>
+			<li>How to emit moves between storage locations.</li>
+			<li>Creation and destruction of contexts with local variables.</li>
+		</ul>
+	</body>
+</html>

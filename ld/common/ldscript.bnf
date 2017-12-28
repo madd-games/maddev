@@ -47,6 +47,7 @@ tokenizer ldscript_tokenize
 	TOK_OPEN_BRACE			'\\{'
 	TOK_CLOSE_BRACE			'\\}'
 	TOK_ASSIGNMENT			'\\='
+	TOK_COMMA			','
 	TOK_ADD_SUB			'[\\-\\+]'
 	TOK_STRING			'\"(\\\"|.)*?\"'
 	TOK_VALUE			'(0[xX][0-9a-fA-F]+|0[0-7]*|[1-9][0-9]*)'
@@ -90,9 +91,28 @@ terminal <Value> TOK_VALUE;
 <SymbolAssignment> ::= <Identifier symbol> '=' <Expr expr> ';' ;
 
 /**
+ * 'load' statement inside section definition.
+ */
+<LoadStatement> ::= 'load' '(' <Identifier name> ')' ';';
+
+/**
+ * Section definition.
+ */
+<Progbits> ::= 'PROGBITS' ;
+<Nobits> ::= 'NOBITS' ;
+<SectionType> ::= <Progbits progbits> | <Nobits nobits>;
+<SectionDefinition> ::= 'section' '(' <Identifier name> ',' <SectionType type> ',' <Identifier flags> ')' '{' <SectionStatementList body> '}' ';' ;
+
+/**
+ * Statements allowed inside a section definition.
+ */
+<SectionStatementList> ::= <SectionStatement statement> <SectionStatementList next> | <SectionStatement statement> ;
+<SectionStatement> ::= <SymbolAssignment symAssign> | <LoadStatement load>;
+
+/**
  * Arbitrary statement and statement list.
  */
-<Statement> ::= <EntryStatement entry> | <SymbolAssignment symAssign>;
+<Statement> ::= <EntryStatement entry> | <SymbolAssignment symAssign> | <SectionDefinition secdef> | ';' ;
 <StatementList> ::= <Statement statement> <StatementList next> | <Statement statement>;
 
 <LinkerScript> ::= <StatementList statements> <EOF> | <EOF>;

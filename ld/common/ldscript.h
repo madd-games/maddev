@@ -44,6 +44,7 @@ enum
 	TOK_OPEN_BRACE,
 	TOK_CLOSE_BRACE,
 	TOK_ASSIGNMENT,
+	TOK_COMMA,
 	TOK_ADD_SUB,
 	TOK_STRING,
 	TOK_VALUE,
@@ -136,8 +137,74 @@ typedef struct
 	int				lineno;
 	int				col;
 	
+	Identifier*			name;
+} LoadStatement;
+
+typedef struct
+{
+	const char*			filename;
+	int				lineno;
+	int				col;
+} Progbits;
+
+typedef struct
+{
+	const char*			filename;
+	int				lineno;
+	int				col;
+} Nobits;
+
+typedef struct
+{
+	const char*			filename;
+	int				lineno;
+	int				col;
+	
+	Progbits*			progbits;
+	Nobits*				nobits;
+} SectionType;
+
+typedef struct
+{
+	const char*			filename;
+	int				lineno;
+	int				col;
+	
+	SymbolAssignment*		symAssign;
+	LoadStatement*			load;
+} SectionStatement;
+
+typedef struct SectionStatementList_
+{
+	const char*			filename;
+	int				lineno;
+	int				col;
+	
+	SectionStatement*		statement;
+	struct SectionStatementList_*	next;
+} SectionStatementList;
+
+typedef struct
+{
+	const char*			filename;
+	int				lineno;
+	int				col;
+	
+	Identifier*			name;
+	SectionType*			type;
+	Identifier*			flags;
+	SectionStatementList*		body;
+} SectionDefinition;
+
+typedef struct
+{
+	const char*			filename;
+	int				lineno;
+	int				col;
+	
 	EntryStatement*			entry;
 	SymbolAssignment*		symAssign;
+	SectionDefinition*		secdef;
 } Statement;
 
 typedef struct StatementList_
@@ -167,6 +234,14 @@ PARSER_DEF(SumAffixList);
 PARSER_DEF(SumExpr);
 PARSER_DEF(Expr);
 PARSER_DEF(EntryStatement);
+PARSER_DEF(Progbits);
+PARSER_DEF(Nobits);
+PARSER_DEF(SymbolAssignment);
+PARSER_DEF(LoadStatement);
+PARSER_DEF(SectionType);
+PARSER_DEF(SectionDefinition);
+PARSER_DEF(SectionStatementList);
+PARSER_DEF(SectionStatement);
 PARSER_DEF(Statement);
 PARSER_DEF(StatementList);
 PARSER_DEF(LinkerScript);

@@ -30,6 +30,7 @@
 #define LD_H_
 
 #include <inttypes.h>
+#include "libobj.h"
 
 /**
  * Represents an evaluated symbol.
@@ -59,5 +60,10 @@ int64_t currentAddr;
  * Set to 1 if any errors occur.
  */
 int errorsOccured;
+
+/**
+ * Name of the executable.
+ */
+const char *progName;
 
 #endif

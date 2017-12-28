@@ -177,6 +177,32 @@ void asProcessDirective(const char *filename, int lineno, char *dir)
 	{
 		asSwitchSection(".text", SECTYPE_PROGBITS, SEC_READ | SEC_EXEC);
 	}
+	else if (strcmp(cmd, ".string") == 0)
+	{
+		char *token = strtok(NULL, "");
+		if (token ==  NULL)
+		{
+			asDiag(filename, lineno, ML_ERROR, "'.string' requires a parameter\n");
+			return;
+		};
+		
+		char *buffer = (char*) malloc(strlen(token)+1);
+		char result = lexParseString(token, buffer);
+		if (result == -1)
+		{
+			asDiag(filename, lineno, ML_ERROR, "invalid string token: %s\n", token);
+		}
+		else if (result != 0)
+		{
+			asDiag(filename, lineno, ML_ERROR, "invalid escape sequence: \\%c\n", result);
+		}
+		else
+		{
+			objSectionAppend(asGetSection(), buffer, strlen(buffer)+1);
+		};
+		
+		free(buffer);
+	}
 	else
 	{
 		asDiag(filename, lineno, ML_ERROR, "invalid assembler directive '%s'\n", cmd);

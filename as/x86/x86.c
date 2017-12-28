@@ -1858,6 +1858,7 @@ void FamilyAssemble(const char *filename, int lineno, char *line)
 	};
 	
 	*put = 0;
+	if (mnemonic[0] == 0) return;
 	
 	while ((strchr(" \t", *line) != NULL) && (*line != 0)) line++;
 	

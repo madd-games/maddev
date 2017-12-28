@@ -204,7 +204,7 @@ typedef struct Symbol_
 	int					flags;
 	
 	/**
-	 * The offset into the section where this symbol is defined.
+	 * The offset from the start of memory where this symbol is defined.
 	 */
 	uint64_t				offset;
 	
@@ -345,7 +345,7 @@ Object* objRead(const char *filename);
 
 /**
  * Import an object. For normal relocatable files, this simply reads the object; for shared libraries it
- * generates an import library. Always returns an object of type OBJTYPE_RELOC.
+ * generates an import library. Always returns an object of type OBJTYPE_RELOC. On error returns NULL.
  */
 Object* objImport(const char *filename);
 

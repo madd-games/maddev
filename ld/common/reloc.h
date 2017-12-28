@@ -26,33 +26,16 @@
 	OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef IMPORT_H_
-#define IMPORT_H_
+#ifndef RELOC_H_
+#define RELOC_H_
 
-/**
- * Object importer. Stores the list of objects and sections which may be imported.
- */
-
-#include "libobj.h"
 #include "ld.h"
+#include "libobj.h"
 
 /**
- * Import an object into the pool. If failed, prints a message and returns 1. Otherwise,
- * returns 0.
+ * Perform a relocation and store the resulting address at the specified position. On error,
+ * prints a message and sets errorsOccured to 1.
  */
-int poolImport(const char *filename);
-
-/**
- * Load input sections with the specified name into the current section. If necessary, prints errors
- * and sets errorOccured to 1.
- *
- * If the section is not defined by any object, this does nothing.
- */
-void poolLoad(const char *secname);
-
-/**
- * Load absolute symbols.
- */
-void poolLoadAbsolute();
+void doReloc(void *relput, int size, int type, uint64_t pos, uint64_t symbol, int64_t addend);
 
 #endif

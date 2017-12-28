@@ -35,12 +35,14 @@
 #include "ldscript.h"
 #include "libobj.h"
 #include "ld.h"
+#include "import.h"
+#include "reloc.h"
 
 SymEval evalSum(SumExpr *sum);
 
 /**
  * Get a symbol by name. Returns NULL if not found. The returned symbol is in the final
- * output object, not within input objects (so it must be laready placed).
+ * output object, not within input objects (so it must be already placed).
  */
 Symbol* getSymbolByName(const char *name)
 {
@@ -75,8 +77,6 @@ SymEval evalPrimary(PrimaryExpr *prim)
 		{
 			eval.sect = currentSection;
 			eval.offset = currentAddr;
-			
-			if (currentSection != NULL) eval.offset -= currentSection->vaddr;
 			
 			return eval;
 		}
@@ -152,8 +152,86 @@ SymEval evalSum(SumExpr *sum)
 	return out;
 };
 
+void handleSymAssign(SymbolAssignment *assign)
+{
+	// symbol assignment
+	const char *name = assign->symbol->value;
+	SymEval eval = evalSum(assign->expr->sum);
+	
+	if (strcmp(name, ".") == 0)
+	{
+		if (currentSection != NULL)
+		{
+			fprintf(stderr, "%s:%d: error: attempting to move place pointer (.) inside a section\n",
+					assign->filename, assign->lineno);
+			errorsOccured = 1;
+		}
+		else
+		{
+			if (eval.sect != NULL)
+			{
+				fprintf(stderr, "%s:%d: error: attempting to move place pointer (.)"
+						" to section-relative address\n",
+						assign->filename, assign->lineno);
+				errorsOccured = 1;
+			}
+			else
+			{
+				currentAddr = eval.offset;
+			};
+		};
+	}
+	else
+	{
+		Symbol *sym = getSymbolByName(name);
+		if (sym != NULL)
+		{
+			fprintf(stderr, "%s:%d: error: redefinition of symbol `%s'\n",
+					assign->filename, assign->lineno, name);
+			errorsOccured = 1;
+		}
+		else
+		{
+			sym = (Symbol*) malloc(sizeof(Symbol));
+			memset(sym, 0, sizeof(Symbol));
+		
+			sym->sect = eval.sect;
+			sym->name = strdup(name);
+			sym->offset = (uint64_t) eval.offset;
+			sym->binding = SYMB_GLOBAL;
+			/* type is irrelevant, won't be used (it's only used in loading) */
+		
+			sym->next = result->symbols;
+			result->symbols = sym;
+		};
+	};
+};
+
+void processSection(SectionStatementList *list)
+{
+	for (; list!=NULL; list=list->next)
+	{
+		SectionStatement *st = list->statement;
+		if (st->symAssign != NULL)
+		{
+			handleSymAssign(st->symAssign);
+		}
+		else if (st->load != NULL)
+		{
+			const char *name = st->load->name->value;
+			poolLoad(name);
+		}
+		else
+		{
+			fprintf(stderr, "%s: parse tree inconsistent inside `section' statement! internal bug!\n", progName);
+			abort();
+		};
+	};
+};
+
 int main(int argc, char *argv[])
 {
+	progName = argv[0];
 	int resultType = OBJTYPE_EXEC;
 	const char *ldfile = NULL;
 	const char *outfile = "a.out";
@@ -175,6 +253,13 @@ int main(int argc, char *argv[])
 		else if (memcmp(argv[i], "-T", 2) == 0)
 		{
 			ldfile = &argv[i][2];
+		}
+		else if (argv[i][0] != '-')
+		{
+			if (poolImport(argv[i]) != 0)
+			{
+				return 1;
+			};
 		}
 		else
 		{
@@ -243,56 +328,69 @@ int main(int argc, char *argv[])
 		}
 		else if (st->symAssign != NULL)
 		{
-			// symbol assignment
-			const char *name = st->symAssign->symbol->value;
-			SymEval eval = evalSum(st->symAssign->expr->sum);
+			handleSymAssign(st->symAssign);
+		}
+		else if (st->secdef != NULL)
+		{
+			// output section definition
+			const char *name = st->secdef->name->value;
+			SectionType *type = st->secdef->type;
+			const char *flags = st->secdef->flags->value;
 			
-			if (strcmp(name, ".") == 0)
+			int sectype;
+			if (type->progbits != NULL)
 			{
-				if (currentSection != NULL)
-				{
-					fprintf(stderr, "%s:%d: error: attempting to move place pointer (.) inside a section\n",
-							st->filename, st->lineno);
-					errorsOccured = 1;
-				}
-				else
-				{
-					if (eval.sect != NULL)
-					{
-						fprintf(stderr, "%s:%d: error: attempting to move place pointer (.)"
-								" to section-relative address\n",
-								st->filename, st->lineno);
-						errorsOccured = 1;
-					}
-					else
-					{
-						currentAddr = eval.offset;
-					};
-				};
+				sectype = SECTYPE_PROGBITS;
+			}
+			else if (type->nobits != NULL)
+			{
+				sectype = SECTYPE_NOBITS;
 			}
 			else
 			{
-				Symbol *sym = getSymbolByName(name);
-				if (sym != NULL)
+				fprintf(stderr, "%s: invalid section type in parse tree! internal bug!\n", argv[0]);
+				abort();
+			};
+			
+			int secflags = 0;
+			for (; *flags!=0; flags++)
+			{
+				switch (*flags)
 				{
-					fprintf(stderr, "%s:%d: error: redefinition of symbol `%s'\n",
-							st->filename, st->lineno, name);
+				case 'r':
+				case 'R':
+					secflags |= SEC_READ;
+					break;
+				case 'w':
+				case 'W':
+					secflags |= SEC_WRITE;
+					break;
+				case 'x':
+				case 'X':
+					secflags |= SEC_EXEC;
+					break;
+				default:
+					fprintf(stderr, "%s:%d: error: invalid section flag `%c'\n",
+						st->filename, st->lineno, *flags);
 					errorsOccured = 1;
-				}
-				else
-				{
-					sym = (Symbol*) malloc(sizeof(Symbol));
-					memset(sym, 0, sizeof(Symbol));
-				
-					sym->sect = eval.sect;
-					sym->name = strdup(name);
-					sym->offset = (uint64_t) eval.offset;
-					sym->binding = SYMB_GLOBAL;
-					/* type is irrelevant, won't be used (it's only used in loading) */
-				
-					sym->next = result->symbols;
-					result->symbols = sym;
+					break;
 				};
+			};
+			
+			if (objGetSection(result, name) != NULL)
+			{
+				fprintf(stderr, "%s:%d: error: redefinition of section `%s'\n",
+					st->filename, st->lineno, name);
+				errorsOccured = 1;
+			}
+			else
+			{
+				currentSection = objCreateSection(result, name, sectype, secflags);
+				currentSection->vaddr = currentSection->paddr = currentAddr;
+				
+				processSection(st->secdef->body);
+				
+				currentSection = NULL;
 			};
 		}
 		else
@@ -300,6 +398,34 @@ int main(int argc, char *argv[])
 			fprintf(stderr, "%s: parse tree inconsistent! internal bug!\n", argv[0]);
 			abort();
 		};
+	};
+	
+	// transfer over absolute symbols
+	poolLoadAbsolute();
+	
+	// perform relocations
+	Section *sect;
+	for (sect=result->sections; sect!=NULL; sect=sect->next)
+	{
+		printf("RELOCATE %s\n", sect->name);
+		
+		Reloc *reloc;
+		for (reloc=sect->relocs; reloc!=NULL; reloc=reloc->next)
+		{
+			uint64_t relocPos = sect->vaddr + reloc->offset;
+			Symbol *sym = getSymbolByName(reloc->symbol);
+			if (sym == NULL)
+			{
+				fprintf(stderr, "%s: undefined reference to `%s'\n", argv[0], reloc->symbol);
+				errorsOccured = 1;
+				continue;
+			};
+			
+			printf("  RELOCATION AT 0x%016lX AGAINST %s+%ld\n", relocPos, reloc->symbol, reloc->addend);		
+			doReloc((char*) sect->data + reloc->offset, reloc->size, reloc->type, relocPos, sym->offset, reloc->addend);
+		};
+		
+		sect->relocs = NULL;
 	};
 	
 	if (!errorsOccured)

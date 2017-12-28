@@ -201,19 +201,16 @@ int objWrite(Object *obj, const char *filename)
 			};
 #endif
 
-			// make sure an undefined symbol exists for this entry.
+			// make sure a symbol exists for this entry.
 			size_t i;
 			int found = 0;
 			for (i=0; i<numSymbols; i++)
 			{
-				if (symtab[i].st_shndx.val == 0)
+				uint32_t nameOffset = ELF_READ32(symtab[i].st_name);
+				if (strcmp(&symstrtab.data[nameOffset], reloc->symbol) == 0)
 				{
-					uint32_t nameOffset = ELF_READ32(symtab[i].st_name);
-					if (strcmp(&symstrtab.data[nameOffset], reloc->symbol) == 0)
-					{
-						found = 1;
-						break;
-					};
+					found = 1;
+					break;
 				};
 			};
 			
@@ -321,9 +318,7 @@ int objWrite(Object *obj, const char *filename)
 		}
 		else
 		{
-			uint64_t vaddr = 0;
-			if (sym->sect != NULL) vaddr = sym->sect->vaddr;
-			elfHeader.e_entry = ELF_MAKE64(vaddr + sym->offset);
+			elfHeader.e_entry = ELF_MAKE64(sym->offset);
 		};
 	};
 	elfHeader.e_phoff = ELF_MAKE64(offProgHeads);
@@ -456,6 +451,7 @@ int objWrite(Object *obj, const char *filename)
 			phdr.p_filesz = ELF_MAKE64(sect->size);
 		};
 		
+		phdr.p_memsz = ELF_MAKE64(sect->size);
 		phdr.p_align = ELF_MAKE64(sect->align);
 		fwrite(&phdr, 1, sizeof(Elf64_Phdr), fp);
 	};
@@ -483,13 +479,10 @@ int objWrite(Object *obj, const char *filename)
 				size_t i;
 				for (i=0; i<numSymbols; i++)
 				{
-					if (symtab[i].st_shndx.val == 0)
+					uint32_t nameOffset = ELF_READ32(symtab[i].st_name);
+					if (strcmp(&symstrtab.data[nameOffset], reloc->symbol) == 0)
 					{
-						uint32_t nameOffset = ELF_READ32(symtab[i].st_name);
-						if (strcmp(&symstrtab.data[nameOffset], reloc->symbol) == 0)
-						{
-							break;
-						};
+						break;
 					};
 				};
 				

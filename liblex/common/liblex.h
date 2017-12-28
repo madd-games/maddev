@@ -176,4 +176,11 @@ int lexCompileTokenSpecs(TokenSpec *specs);
  */
 char* lexTokenize(Token *out, const char *filename, const char *input, TokenSpec *specs);
 
+/**
+ * Parse a string token (C-style), and store in the given buffer. The buffer must have a size at least equal
+ * to the token. Returns 0 on success, or a character indicating a broken escape sequence, or -1 if the string
+ * is invalid (no quotes).
+ */
+char lexParseString(const char *token, char *buffer);
+
 #endif

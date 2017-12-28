@@ -371,3 +371,92 @@ char* lexTokenize(Token *out, const char *filename, const char *input, TokenSpec
 	plAdd((Pipeline*)out, NULL);
 	return NULL;
 };
+
+char lexParseString(const char *token, char *buffer)
+{
+	if (token[0] != '"') return (char) -1;
+	if (token[strlen(token)-1] != '"') return (char) -1;
+	
+	const char *scan = &token[1];
+	while (*scan != 0)
+	{
+		if (*scan == '"')
+		{
+			*buffer = 0;
+			if (scan[1] != 0) return (char) -1;
+			else return 0;
+		}
+		else if (*scan == '\\')
+		{
+			scan++;
+			char c = *scan++;
+			
+			// NOTE: Other than the universal escape sequences, we must use ASCII numbers
+			// instead of C chars here when placing in the buffer, since the C compiler
+			// compiling this may not recognise our extensions.
+			if (c == '\\')
+			{
+				*buffer++ = '\\';
+			}
+			else if (c == 'n')
+			{
+				*buffer++ = '\n';
+			}
+			else if (c == '"')
+			{
+				*buffer++ = '"';
+			}
+			else if (c == '\'')
+			{
+				*buffer++ = '\'';
+			}
+			else if (c == 'a')
+			{
+				*buffer++ = 0x07;
+			}
+			else if (c == 'b')
+			{
+				*buffer++ = 0x08;
+			}
+			else if (c == 'f')
+			{
+				*buffer++ = 0x0C;
+			}
+			else if (c == 'n')
+			{
+				*buffer++ = 0x0A;
+			}
+			else if (c == 'r')
+			{
+				*buffer++ = 0x0D;
+			}
+			else if (c == 't')
+			{
+				*buffer++ = 0x09;
+			}
+			else if (c == 'v')
+			{
+				*buffer++ = 0x0B;
+			}
+			else if (c == '?')
+			{
+				*buffer++ = 0x3F;
+			}
+			else if (c == 'e')
+			{
+				*buffer++ = 0x1B;
+			}
+			else
+			{
+				return c;
+			};
+		}
+		else
+		{
+			*buffer++ = *scan++;
+		};
+	};
+	
+	*buffer = 0;
+	return 0;
+};
