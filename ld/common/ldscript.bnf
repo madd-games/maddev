@@ -66,7 +66,7 @@ terminal <Value> TOK_VALUE;
 /**
  * Primary expression.
  */
-<PrimaryExpr> ::= <Value value> | <Identifier name> | '(' <Expr expr> ')' ;
+<PrimaryExpr> ::= 'align' '(' <Expr align> ')' | <Value value> | <Identifier name> | '(' <Expr expr> ')' ;
 
 /**
  * Sum expression: the sum of a chain of values.

@@ -95,6 +95,28 @@ SymEval evalPrimary(PrimaryExpr *prim)
 			return eval;
 		};
 	}
+	else if (prim->align != NULL)
+	{
+		SymEval eval = evalSum(prim->align->sum);
+		if (eval.sect != NULL)
+		{
+			fprintf(stderr, "%s:%d: error: argument to align() must not be section-relative\n",
+				prim->filename, prim->lineno);
+			errorsOccured = 1;
+		};
+		
+		if (currentSection != NULL)
+		{
+			fprintf(stderr, "%s:%d: error: cannot calculate alignment inside a section definition\n",
+				prim->filename, prim->lineno);
+			errorsOccured = 1;
+		};
+		
+		SymEval result;
+		result.sect = NULL;
+		result.offset = ((currentAddr + eval.offset - 1) / (eval.offset)) * (eval.offset);
+		return result;
+	}
 	else
 	{
 		return evalSum(prim->expr->sum);

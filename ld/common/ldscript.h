@@ -71,6 +71,7 @@ typedef struct
 	Value*				value;
 	Identifier*			name;
 	struct Expr_*			expr;
+	struct Expr_*			align;
 } PrimaryExpr;
 
 typedef struct
