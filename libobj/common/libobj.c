@@ -234,7 +234,7 @@ void objAbsoluteSymbol(Object *obj, const char *name, uint64_t value, uint64_t a
 	sym->flags = 0;
 	sym->offset = value;
 	sym->size = size;
-	sym->binding = SYMB_LOCAL;
+	sym->binding = SYMB_GLOBAL;
 	sym->type = SYMT_NONE;
 	if (size != 0) sym->type = SYMT_OBJECT;
 	sym->sect = NULL;

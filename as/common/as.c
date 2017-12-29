@@ -80,6 +80,27 @@ void asProcessDirective(const char *filename, int lineno, char *dir)
 		
 		objSymbolBinding(asObject, symname, SYMB_WEAK);
 	}
+	else if (strcmp(cmd, ".equ") == 0)
+	{
+		char *symname = strtok(NULL, " \t\n");
+		char *valstr = strtok(NULL, " \t\n");
+		
+		if (symname == NULL || valstr == NULL)
+		{
+			asDiag(filename, lineno, ML_ERROR, "'.equ' directive expects 2 parameters\n");
+			return;
+		};
+		
+		char *endptr;
+		unsigned long value = strtoul(valstr, &endptr, 0);
+		if (*endptr != 0)
+		{
+			asDiag(filename, lineno, ML_ERROR, "second parameter to '.equ' must be an integer constant\n");
+			return;
+		};
+		
+		objAbsoluteSymbol(asObject, symname, value, 0, 0);
+	}
 	else if (strcmp(cmd, ".comm") == 0)
 	{
 		char *name = strtok(NULL, " \t\n");
