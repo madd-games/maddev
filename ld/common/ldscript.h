@@ -170,9 +170,17 @@ typedef struct
 	const char*			filename;
 	int				lineno;
 	int				col;
+} MergeStatement;
+
+typedef struct
+{
+	const char*			filename;
+	int				lineno;
+	int				col;
 	
 	SymbolAssignment*		symAssign;
 	LoadStatement*			load;
+	MergeStatement*			merge;
 } SectionStatement;
 
 typedef struct SectionStatementList_

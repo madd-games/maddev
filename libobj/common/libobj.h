@@ -78,6 +78,11 @@
 #define	OBJTYPE_SHARED				2	/* shared library */
 
 /**
+ * Offset value for a common symbol.
+ */
+#define	SYMOFF_COMMON				(~((uint64_t)0))
+
+/**
  * Structures used to represent types in specific byte order. We define that as structures to
  * prevent the compiler from accepting writes to the wrong type.
  */
@@ -204,7 +209,8 @@ typedef struct Symbol_
 	int					flags;
 	
 	/**
-	 * The offset from the start of memory where this symbol is defined.
+	 * The offset from the start of memory where this symbol is defined. If set to SYMOFF_COMMON,
+	 * then this is a common symbol.
 	 */
 	uint64_t				offset;
 	
@@ -222,6 +228,11 @@ typedef struct Symbol_
 	 * Type of symbol (SYMT_*).
 	 */
 	int					type;
+	
+	/**
+	 * Alignment, for common symbols. Ignored for anything else.
+	 */
+	uint64_t				align;
 } Symbol;
 
 /**
@@ -329,6 +340,13 @@ void objSymbolType(Object *obj, const char *name, int type);
  * Set the size of a symbol. It does not have to be defined yet.
  */
 void objSymbolSize(Object *obj, const char *name, size_t size);
+
+/**
+ * Define an absolute symbol with the specified name, value, alignment and size.
+ * If 'value' is SYMOFF_COMMON, it's a common symbol.
+ * Alignment is ignored except for common symbols.
+ */
+void objAbsoluteSymbol(Object *obj, const char *name, uint64_t value, uint64_t align, uint64_t size);
 
 /**
  * Write an object description to an object file. This is implemented by the backend. Returns 0 on

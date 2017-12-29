@@ -63,7 +63,7 @@ void asProcessDirective(const char *filename, int lineno, char *dir)
 		char *symname = strtok(NULL, " \t\n");
 		if (symname == NULL)
 		{
-			asDiag(filename, lineno, ML_ERROR, "'.globl' directive expects a parameter\n", filename, lineno);
+			asDiag(filename, lineno, ML_ERROR, "'.globl' directive expects a parameter\n");
 			return;
 		};
 		
@@ -74,11 +74,40 @@ void asProcessDirective(const char *filename, int lineno, char *dir)
 		char *symname = strtok(NULL, " \t\n");
 		if (symname == NULL)
 		{
-			asDiag(filename, lineno, ML_ERROR, "'.weak' directive expects a parameter\n", filename, lineno);
+			asDiag(filename, lineno, ML_ERROR, "'.weak' directive expects a parameter\n");
 			return;
 		};
 		
 		objSymbolBinding(asObject, symname, SYMB_WEAK);
+	}
+	else if (strcmp(cmd, ".comm") == 0)
+	{
+		char *name = strtok(NULL, " \t\n");
+		char *alignstr = strtok(NULL, " \t\n");
+		char *sizestr = strtok(NULL, " \t\n");
+		
+		if (name == NULL || alignstr == NULL || sizestr == NULL)
+		{
+			asDiag(filename, lineno, ML_ERROR, "'.comm' directive expects a parameter\n");
+			return;
+		};
+		
+		char *endptr;
+		unsigned long align = strtoul(alignstr, &endptr, 0);
+		if (*endptr != 0)
+		{
+			asDiag(filename, lineno, ML_ERROR, "the second argument to '.comm' must be an integer\n");
+			return;
+		};
+		
+		unsigned long size = strtoul(sizestr, &endptr, 0);
+		if (*endptr != 0)
+		{
+			asDiag(filename, lineno, ML_ERROR, "the third argument to '.comm' must be an integer\n");
+			return;
+		};
+		
+		objAbsoluteSymbol(asObject, name, SYMOFF_COMMON, align, size);
 	}
 	else if (strcmp(cmd, ".section") == 0)
 	{

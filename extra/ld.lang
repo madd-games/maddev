@@ -55,6 +55,7 @@
 			<keyword>align</keyword>
 			<keyword>entry</keyword>
 			<keyword>load</keyword>
+			<keyword>merge_common</keyword>
 		</context>
 
 		<context id="comment" style-ref="comment">

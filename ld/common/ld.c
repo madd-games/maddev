@@ -37,13 +37,10 @@
 #include "ld.h"
 #include "import.h"
 #include "reloc.h"
+#include "libcommon.h"
 
 SymEval evalSum(SumExpr *sum);
 
-/**
- * Get a symbol by name. Returns NULL if not found. The returned symbol is in the final
- * output object, not within input objects (so it must be already placed).
- */
 Symbol* getSymbolByName(const char *name)
 {
 	Symbol *sym;
@@ -243,6 +240,18 @@ void processSection(SectionStatementList *list)
 			const char *name = st->load->name->value;
 			poolLoad(name);
 		}
+		else if (st->merge != NULL)
+		{
+			if (currentSection->type != SECTYPE_NOBITS)
+			{
+				fprintf(stderr, "%s:%d: error: `merge_common' is only allowed in a NOBITS section\n",
+					st->filename, st->lineno);
+				errorsOccured = 1;
+				continue;
+			};
+			
+			poolMergeCommon();
+		}
 		else
 		{
 			fprintf(stderr, "%s: parse tree inconsistent inside `section' statement! internal bug!\n", progName);
@@ -429,8 +438,6 @@ int main(int argc, char *argv[])
 	Section *sect;
 	for (sect=result->sections; sect!=NULL; sect=sect->next)
 	{
-		printf("RELOCATE %s\n", sect->name);
-		
 		Reloc *reloc;
 		for (reloc=sect->relocs; reloc!=NULL; reloc=reloc->next)
 		{
@@ -443,7 +450,6 @@ int main(int argc, char *argv[])
 				continue;
 			};
 			
-			printf("  RELOCATION AT 0x%016lX AGAINST %s+%ld\n", relocPos, reloc->symbol, reloc->addend);		
 			doReloc((char*) sect->data + reloc->offset, reloc->size, reloc->type, relocPos, sym->offset, reloc->addend);
 		};
 		
@@ -459,6 +465,7 @@ int main(int argc, char *argv[])
 			return 1;
 		};
 		
+		if (result->type == OBJTYPE_EXEC) markFileExecutable(outfile);
 		return 0;
 	}
 	else

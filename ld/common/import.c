@@ -151,6 +151,13 @@ void poolLoad(const char *secname)
 					newsym->name = (char*) malloc(strlen(ent->name) + strlen(sym->name) + 2);
 					sprintf(newsym->name, "%s:%s", ent->name, sym->name);
 				};
+				
+				if (getSymbolByName(newsym->name) != NULL)
+				{
+					fprintf(stderr, "%s: multiple definition of `%s'\n", progName, newsym->name);
+					errorsOccured = 1;
+				};
+				
 				newsym->offset = (sym->offset - sect->vaddr) + currentSection->vaddr;
 				newsym->binding = SYMB_GLOBAL;
 				/* type is irrelevant, won't be used (it's only used in loading) */
@@ -174,8 +181,14 @@ void poolLoadAbsolute()
 		Symbol *sym;
 		for (sym=obj->symbols; sym!=NULL; sym=sym->next)
 		{
-			if (sym->sect == NULL)
+			if (sym->sect == NULL && sym->offset != SYMOFF_COMMON)
 			{
+				if (getSymbolByName(sym->name) != NULL)
+				{
+					fprintf(stderr, "%s: multiple definition of `%s'\n", progName, sym->name);
+					errorsOccured = 1;
+				};
+				
 				Symbol *newsym = (Symbol*) malloc(sizeof(Symbol));
 				memset(newsym, 0, sizeof(Symbol));
 	
@@ -187,6 +200,50 @@ void poolLoadAbsolute()
 	
 				newsym->next = result->symbols;
 				result->symbols = newsym;
+			};
+		};
+	};
+};
+
+void poolMergeCommon()
+{
+	PoolEntry *ent;
+	for (ent=poolFirst; ent!=NULL; ent=ent->next)
+	{
+		Object *obj = ent->obj;
+		Symbol *sym;
+		for (sym=obj->symbols; sym!=NULL; sym=sym->next)
+		{
+			if (sym->sect == NULL && sym->offset == SYMOFF_COMMON)
+			{
+				if (getSymbolByName(sym->name) != NULL)
+				{
+					// already merged or defined
+					continue;
+				};
+				
+				// align section
+				size_t padSize = sym->align - (currentAddr % sym->align);
+				if (padSize != sym->align)
+				{
+					objSectionResv(currentSection, padSize);
+					currentAddr += padSize;
+				};
+				
+				Symbol *newsym = (Symbol*) malloc(sizeof(Symbol));
+				memset(newsym, 0, sizeof(Symbol));
+	
+				newsym->sect = currentSection;
+				newsym->name = strdup(sym->name);
+				newsym->offset = currentAddr;
+				newsym->binding = SYMB_GLOBAL;
+				/* type is irrelevant, won't be used (it's only used in loading) */
+	
+				newsym->next = result->symbols;
+				result->symbols = newsym;
+				
+				objSectionResv(currentSection, sym->size);
+				currentAddr += sym->size;
 			};
 		};
 	};

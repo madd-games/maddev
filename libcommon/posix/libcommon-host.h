@@ -29,13 +29,17 @@
 #ifndef LIBCOMMON_HOST_H_
 #define LIBCOMMON_HOST_H_
 
+#include <sys/stat.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <unistd.h>
 
 typedef sem_t Semaphore;
 
-#define	semInit(sem, num)	sem_init(sem, 0, num)
-#define	semWait			sem_wait
-#define	semSignal		sem_post
+#define	semInit(sem, num)			sem_init(sem, 0, num)
+#define	semWait					sem_wait
+#define	semSignal				sem_post
+
+#define	markFileExecutable(name)		chmod(name, 0755)
 
 #endif

@@ -55,4 +55,9 @@ void poolLoad(const char *secname);
  */
 void poolLoadAbsolute();
 
+/**
+ * Merge common symbols into the current section.
+ */
+void poolMergeCommon();
+
 #endif

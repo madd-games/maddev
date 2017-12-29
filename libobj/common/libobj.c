@@ -227,6 +227,23 @@ void objSymbolSize(Object *obj, const char *name, size_t size)
 	obj->symbols = sym;
 };
 
+void objAbsoluteSymbol(Object *obj, const char *name, uint64_t value, uint64_t align, uint64_t size)
+{
+	Symbol *sym = (Symbol*) malloc(sizeof(Symbol));
+	sym->name = strdup(name);
+	sym->flags = 0;
+	sym->offset = value;
+	sym->size = size;
+	sym->binding = SYMB_LOCAL;
+	sym->type = SYMT_NONE;
+	if (size != 0) sym->type = SYMT_OBJECT;
+	sym->sect = NULL;
+	sym->align = align;
+	
+	sym->next = obj->symbols;
+	obj->symbols = sym;
+};
+
 ObjLE16 OBJ_MAKE_LE16(uint16_t val)
 {
 	uint8_t bytes[2];

@@ -198,7 +198,6 @@ Object* objRead(const char *filename)
 					switch (ELF_READ16(symtab[j].st_shndx))
 					{
 					case SHN_UNDEF:
-					case SHN_COMMON:	/* common symbols not yet supported */
 						found = 0;
 						break;
 					};
@@ -206,7 +205,7 @@ Object* objRead(const char *filename)
 					if (!found) continue;
 					Symbol *symbol = (Symbol*) malloc(sizeof(Symbol));
 					memset(symbol, 0, sizeof(Symbol));
-					if (ELF_READ16(symtab[j].st_shndx) == SHN_ABS)
+					if (ELF_READ16(symtab[j].st_shndx) == SHN_ABS || ELF_READ16(symtab[j].st_shndx) == SHN_COMMON)
 					{
 						symbol->sect = NULL;
 					}
@@ -231,6 +230,12 @@ Object* objRead(const char *filename)
 					default:
 						symbol->binding = SYMB_LOCAL;
 						break;
+					};
+					
+					if (ELF_READ16(symtab[j].st_shndx) == SHN_COMMON)
+					{
+						symbol->offset = SYMOFF_COMMON;
+						symbol->align = ELF_READ64(symtab[j].st_value);
 					};
 					
 					symbol->next = obj->symbols;

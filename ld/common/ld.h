@@ -66,4 +66,10 @@ int errorsOccured;
  */
 const char *progName;
 
+/**
+ * Get a symbol by name. Returns NULL if not found. The returned symbol is in the final
+ * output object, not within input objects (so it must be already placed).
+ */
+Symbol* getSymbolByName(const char *name);
+
 #endif

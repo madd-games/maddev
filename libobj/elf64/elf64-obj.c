@@ -125,7 +125,7 @@ int objWrite(Object *obj, const char *filename)
 	size_t numLocalSymbols = 0;		/* maybe later */
 	memset(symtab, 0, sizeof(Elf64_Sym));
 	
-	// local symbols
+	// local and global symbols
 	Symbol *sym;
 	for (sym=obj->symbols; sym!=NULL; sym=sym->next)
 	{
@@ -171,7 +171,17 @@ int objWrite(Object *obj, const char *filename)
 		{
 			symtab[index].st_shndx = ELF_MAKE16(SHN_ABS);
 		};
-		symtab[index].st_value = ELF_MAKE64(sym->offset);
+		
+		if (sym->offset == SYMOFF_COMMON)
+		{
+			symtab[index].st_shndx = ELF_MAKE16(SHN_COMMON);
+			symtab[index].st_value = ELF_MAKE64(sym->align);
+		}
+		else
+		{
+			symtab[index].st_value = ELF_MAKE64(sym->offset);
+		};
+		
 		symtab[index].st_size = ELF_MAKE64(sym->size);
 	};
 	
