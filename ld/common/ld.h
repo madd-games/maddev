@@ -42,6 +42,23 @@ typedef struct
 } SymEval;
 
 /**
+ * An appender, appends data to the current section according to a type.
+ * If the value cannot fit in the given type, returns -1, otherwise append
+ * and return 0.
+ */
+typedef int (*Appender)(long value);
+
+/**
+ * Linker type definition.
+ */
+typedef struct LinkerType_
+{
+	struct LinkerType_*		next;
+	Appender			appender;
+	const char*			name;
+} LinkerType;
+
+/**
  * The final object we are creating.
  */
 Object *result;

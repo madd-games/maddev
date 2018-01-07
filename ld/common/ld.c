@@ -39,6 +39,78 @@
 #include "reloc.h"
 #include "libcommon.h"
 
+int appendLE(long value, size_t bytes)
+{
+	long working = value;
+	uint8_t raw[bytes];
+	
+	int i;
+	for (i=0; i<bytes; i++)
+	{
+		raw[i] = (working & 0xFF);
+		working >>= 8;
+	};
+	
+	// TODO: test for overflows
+	
+	objSectionAppend(currentSection, raw, bytes);
+	return 0;
+};
+
+int appendBE(long value, size_t bytes)
+{
+	long working = value;
+	uint8_t raw[bytes];
+	
+	int i;
+	for (i=0; i<bytes; i++)
+	{
+		raw[bytes-1-i] = (working & 0xFF);
+		working >>= 8;
+	};
+	
+	// TODO: test for overflows
+	
+	objSectionAppend(currentSection, raw, bytes);
+	return 0;
+};
+
+int appendLE8(long value) {return appendLE(value, 1);};
+int appendLE16(long value) {return appendLE(value, 2);};
+int appendLE32(long value) {return appendLE(value, 4);};
+int appendLE64(long value) {return appendLE(value, 8);};
+
+int appendBE8(long value) {return appendBE(value, 1);};
+int appendBE16(long value) {return appendBE(value, 2);};
+int appendBE32(long value) {return appendBE(value, 4);};
+int appendBE64(long value) {return appendBE(value, 8);};
+
+LinkerType typeLE8 = {NULL, appendLE8, "le8_t"};
+LinkerType typeLE16 = {&typeLE8, appendLE16, "le16_t"};
+LinkerType typeLE32 = {&typeLE16, appendLE32, "le32_t"};
+LinkerType typeLE64 = {&typeLE32, appendLE64, "le64_t"};
+
+LinkerType typeBE8 = {&typeLE64, appendBE8, "be8_t"};
+LinkerType typeBE16 = {&typeBE8, appendBE16, "be16_t"};
+LinkerType typeBE32 = {&typeBE16, appendBE32, "be32_t"};
+LinkerType typeBE64 = {&typeBE32, appendBE64, "be64_t"};
+
+LinkerType *linkerTypes = &typeBE64;
+
+Appender getAppenderByName(const char *name)
+{
+	LinkerType *type;
+	for (type=linkerTypes; type!=NULL; type=type->next)
+	{
+		if (strcmp(type->name, name) == 0)
+		{
+			return type->appender;
+		};
+	};
+	
+	return NULL;
+};
+
 SymEval evalSum(SumExpr *sum);
 
 Symbol* getSymbolByName(const char *name)
@@ -252,6 +324,64 @@ void processSection(SectionStatementList *list)
 			
 			poolMergeCommon();
 		}
+		else if (st->append != NULL)
+		{
+			if (currentSection->type != SECTYPE_PROGBITS)
+			{
+				fprintf(stderr, "%s:%d: error: `append' is only allowed in a PROGBITS section\n",
+					st->filename, st->lineno);
+				errorsOccured = 1;
+				continue;
+			};
+			
+			Appender appender = getAppenderByName(st->append->type->value);
+			if (appender == NULL)
+			{
+				fprintf(stderr, "%s:%d: error: unknown type name `%s'\n", st->filename, st->lineno,
+					st->append->type->value);
+				errorsOccured = 1;
+				continue;
+			};
+			
+			SymEval eval = evalSum(st->append->value->sum);
+			
+			long value = eval.offset;		// section irrelevant
+			if (appender(value) != 0)
+			{
+				fprintf(stderr, "%s:%d: error: expression value (%ld) does not fit in type `%s'\n",
+					st->filename, st->lineno, value, st->append->type->value);
+				errorsOccured = 1;
+			};
+		}
+		else if (st->str != NULL)
+		{
+			if (currentSection->type != SECTYPE_PROGBITS)
+			{
+				fprintf(stderr, "%s:%d: error: `string' is only allowed in a PROGBITS section\n",
+					st->filename, st->lineno);
+				errorsOccured = 1;
+				continue;
+			};
+			
+			const char *str = st->str->str->value;
+			char *buffer = (char*) malloc(strlen(str)+1);
+			char result = lexParseString(str, buffer);
+			
+			if (result == -1)
+			{
+				fprintf(stderr, "%s: a non-string was parsed as a string token! internal bug!\n", progName);
+				abort();
+			}
+			else if (result != 0)
+			{
+				fprintf(stderr, "%s:%d: error: invalid escape sequence: \\%c\n", st->filename, st->lineno, result);
+				errorsOccured = 1;
+			}
+			else
+			{
+				objSectionAppend(currentSection, buffer, strlen(buffer));
+			};
+		}
 		else
 		{
 			fprintf(stderr, "%s: parse tree inconsistent inside `section' statement! internal bug!\n", progName);
@@ -383,6 +513,34 @@ int main(int argc, char *argv[])
 		else if (st->symAssign != NULL)
 		{
 			handleSymAssign(st->symAssign);
+		}
+		else if (st->newtype != NULL)
+		{
+			const char *oldname = st->newtype->oldtype->value;
+			const char *newname = st->newtype->newtype->value;
+			
+			Appender appender = getAppenderByName(oldname);
+			if (appender == NULL)
+			{
+				fprintf(stderr, "%s:%d: error: unknown type name `%s'\n",
+					st->filename, st->lineno, oldname);
+				errorsOccured = 1;
+				continue;
+			};
+			
+			if (getAppenderByName(newname) != NULL)
+			{
+				fprintf(stderr, "%s:%d: error: redefinition of type `%s'\n",
+					st->filename, st->lineno, newname);
+				errorsOccured = 1;
+				continue;
+			};
+			
+			LinkerType *type = (LinkerType*) malloc(sizeof(LinkerType));
+			type->next = linkerTypes;
+			linkerTypes = type;
+			type->appender = appender;
+			type->name = newname;
 		}
 		else if (st->secdef != NULL)
 		{

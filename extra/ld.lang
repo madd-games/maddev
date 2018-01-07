@@ -56,6 +56,9 @@
 			<keyword>entry</keyword>
 			<keyword>load</keyword>
 			<keyword>merge_common</keyword>
+			<keyword>append</keyword>
+			<keyword>string</keyword>
+			<keyword>typedef</keyword>
 		</context>
 
 		<context id="comment" style-ref="comment">
@@ -85,6 +88,22 @@
 			<keyword>NOBITS</keyword>
 		</context>
 		
+		<context id="type" style-ref="type">
+			<keyword>le8_t</keyword>
+			<keyword>le16_t</keyword>
+			<keyword>le32_t</keyword>
+			<keyword>le64_t</keyword>
+			
+			<keyword>be8_t</keyword>
+			<keyword>be16_t</keyword>
+			<keyword>be32_t</keyword>
+			<keyword>be64_t</keyword>
+		</context>
+
+		<context id="numeric" style-ref="number">
+			<match>([1-9][0-9]*|0x[0-9a-fA-F]+|0[0-7]*)</match>
+		</context>
+		
 		<context id="maddevld" class="no-spell-check">
 			<include>
 				<context ref="keyword"/>
@@ -92,6 +111,8 @@
 				<context ref="blockcomment"/>
 				<context ref="string"/>
 				<context ref="const"/>
+				<context ref="type"/>
+				<context ref="numeric"/>
 			</include>
 		</context>
 

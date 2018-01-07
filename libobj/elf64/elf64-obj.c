@@ -62,7 +62,8 @@ int objWrite(Object *obj, const char *filename)
 	 *  - string table for the symbol table
 	 * Then for each libobj section, emit the section itself, and its relocation table.
 	 *
-	 * For program headers: it's PT_NULL plus a header for every section
+	 * For program headers: it's PT_NULL plus a header for every section, plus an additional
+	 * DYNAMIC header for the ".dynamic" section.
 	 */
 	size_t numSections = 4;
 	size_t numProgHeads = 1;
@@ -72,6 +73,12 @@ int objWrite(Object *obj, const char *filename)
 		sect->aux.index = numSections;
 		numSections += 2;	/* section itself, and the relocation table */
 		numProgHeads++;
+		
+		if (strcmp(sect->name, ".dynamic") == 0)
+		{
+			// dynamic section needs an additional DYNAMIC header
+			numProgHeads++;
+		};
 	};
 	
 	/**
@@ -441,6 +448,10 @@ int objWrite(Object *obj, const char *filename)
 	for (sect=obj->sections; sect!=NULL; sect=sect->next)
 	{
 		phdr.p_type = ELF_MAKE32(PT_LOAD);
+		if (strcmp(sect->name, ".interp") == 0)
+		{
+			phdr.p_type = ELF_MAKE32(PT_INTERP);
+		};
 		
 		int flags;
 		if (sect->flags & SEC_READ) flags |= PF_R;
@@ -464,6 +475,19 @@ int objWrite(Object *obj, const char *filename)
 		phdr.p_memsz = ELF_MAKE64(sect->size);
 		phdr.p_align = ELF_MAKE64(sect->align);
 		fwrite(&phdr, 1, sizeof(Elf64_Phdr), fp);
+		
+		if (strcmp(sect->name, ".dynamic") == 0)
+		{
+			phdr.p_type = ELF_MAKE32(PT_DYNAMIC);
+			phdr.p_flags = ELF_MAKE32(flags);
+			phdr.p_offset = ELF_MAKE64(sect->aux.dataOff);
+			phdr.p_vaddr = ELF_MAKE64(sect->vaddr);
+			phdr.p_paddr = ELF_MAKE64(sect->paddr);
+			phdr.p_filesz = ELF_MAKE64(sect->size);
+			phdr.p_memsz = ELF_MAKE64(sect->size);
+			phdr.p_align = ELF_MAKE64(sect->align);
+			fwrite(&phdr, 1, sizeof(Elf64_Phdr), fp);
+		};
 	};
 	
 	/* section name string table */

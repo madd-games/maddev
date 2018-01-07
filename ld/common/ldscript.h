@@ -146,6 +146,25 @@ typedef struct
 	const char*			filename;
 	int				lineno;
 	int				col;
+	
+	Identifier*			type;
+	Expr*				value;
+} AppendStatement;
+
+typedef struct
+{
+	const char*			filename;
+	int				lineno;
+	int				col;
+	
+	String*				str;
+} StringStatement;
+
+typedef struct
+{
+	const char*			filename;
+	int				lineno;
+	int				col;
 } Progbits;
 
 typedef struct
@@ -181,6 +200,8 @@ typedef struct
 	SymbolAssignment*		symAssign;
 	LoadStatement*			load;
 	MergeStatement*			merge;
+	AppendStatement*		append;
+	StringStatement*		str;
 } SectionStatement;
 
 typedef struct SectionStatementList_
@@ -211,9 +232,20 @@ typedef struct
 	int				lineno;
 	int				col;
 	
+	Identifier*			oldtype;
+	Identifier*			newtype;
+} TypeDef;
+
+typedef struct
+{
+	const char*			filename;
+	int				lineno;
+	int				col;
+	
 	EntryStatement*			entry;
 	SymbolAssignment*		symAssign;
 	SectionDefinition*		secdef;
+	TypeDef*			newtype;
 } Statement;
 
 typedef struct StatementList_
