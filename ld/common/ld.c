@@ -285,6 +285,29 @@ int main(int argc, char *argv[])
 		{
 			ldfile = &argv[i][2];
 		}
+		else if (strcmp(argv[i], "-o") == 0)
+		{
+			i++;
+			if (i == argc)
+			{
+				fprintf(stderr, "%s: -o option expects a parameter\n", argv[0]);
+				return 1;
+			};
+			
+			outfile = argv[i];
+		}
+		else if (memcmp(argv[i], "-o", 2) == 0)
+		{
+			outfile = &argv[i][2];
+		}
+		else if (strcmp(argv[i], "-shared") == 0)
+		{
+			resultType = OBJTYPE_SHARED;
+		}
+		else if (strcmp(argv[i], "-r") == 0)
+		{
+			resultType = OBJTYPE_RELOC;
+		}
 		else if (argv[i][0] != '-')
 		{
 			if (poolImport(argv[i]) != 0)

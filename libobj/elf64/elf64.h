@@ -214,6 +214,16 @@ typedef struct
 	Elf64_Xword		p_align;
 } Elf64_Phdr;
 
+typedef struct
+{
+	Elf64_Xword d_tag;
+	union
+	{
+		Elf64_Xword	d_val;
+		Elf64_Addr	d_ptr;
+	} d_un;
+} Elf64_Dyn;
+
 uint64_t elfGetReloc(int size, int type);
 int elfReadReloc(uint64_t elfrel, int *size, int *type);
 
